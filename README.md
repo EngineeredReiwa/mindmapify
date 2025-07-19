@@ -4,4 +4,4 @@
 
 Drag, drop, and click — your thoughts, structured and ready to share.
 
-> “Think freely. Export clearly.” ✨
+> "Think freely. Export clearly." ✨
