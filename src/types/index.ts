@@ -85,7 +85,7 @@ export interface MindmapSnapshot {
 // Action types for better type safety
 export interface NodeActions {
   addNode: (position: Position, text?: string) => void;
-  updateNode: (id: string, updates: Partial<Node>) => void;
+  updateNode: (id: string, updates: Partial<Node>, saveHistory?: boolean) => void;
   deleteNode: (id: string) => void;
   selectNode: (id: string | undefined) => void;
   startEditing: (id: string) => void;

@@ -6,6 +6,7 @@
       "Bash(grep:*)",
       "Bash(rg:*)",
       "Bash(mkdir:*)",
+      "Bash(sed:*)",
       "Bash(npm run typecheck:*)",
       "Bash(npm run dev:*)",
       "Bash(npm run dev &)",

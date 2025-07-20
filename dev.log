@@ -523,3 +523,94 @@ PORT from env: undefined
 1:36:02 PM [vite] (client) hmr update /src/components/Canvas/Canvas.tsx, /src/index.css
 1:36:19 PM [vite] (client) hmr update /src/App.tsx, /src/index.css
 1:36:34 PM [vite] (client) hmr update /src/App.tsx, /src/index.css
+1:39:48 PM [vite] (client) page reload docs/IMPLEMENTATION_ROADMAP.md
+1:41:10 PM [vite] (client) page reload temp/test-button-state.js
+1:41:36 PM [vite] (client) hmr update /src/App.tsx, /src/index.css, /src/components/Canvas/Canvas.tsx, /src/components/Toolbar/Toolbar.tsx, /src/components/Connection/ConnectionLine.tsx, /src/components/Node/NodeComponent.tsx
+1:42:44 PM [vite] (client) page reload temp/test-button-state.js
+1:44:15 PM [vite] (client) hmr update /src/components/Canvas/Canvas.tsx, /src/index.css
+1:44:23 PM [vite] (client) hmr update /src/components/Canvas/Canvas.tsx, /src/index.css
+1:44:29 PM [vite] (client) hmr update /src/components/Canvas/Canvas.tsx, /src/index.css
+1:44:35 PM [vite] (client) hmr update /src/components/Toolbar/Toolbar.tsx, /src/index.css
+1:44:39 PM [vite] (client) hmr update /src/components/Toolbar/Toolbar.tsx, /src/index.css
+1:45:50 PM [vite] (client) hmr update /src/App.tsx, /src/index.css, /src/components/Canvas/Canvas.tsx, /src/components/Toolbar/Toolbar.tsx, /src/components/Connection/ConnectionLine.tsx, /src/components/Node/NodeComponent.tsx
+1:45:57 PM [vite] (client) hmr update /src/index.css, /src/components/Connection/ConnectionLabelEditor.tsx
+1:46:34 PM [vite] (client) hmr update /src/components/Node/NodeComponent.tsx, /src/index.css
+1:46:56 PM [vite] (client) hmr update /src/components/Node/NodeComponent.tsx, /src/index.css
+1:49:48 PM [vite] (client) page reload docs/IMPLEMENTATION_ROADMAP.md
+1:51:09 PM [vite] (client) page reload .claude/settings.local.json
+1:51:23 PM [vite] (client) page reload .claude/settings.json
+1:51:53 PM [vite] (client) page reload temp/test-undo-redo.cjs
+1:51:57 PM [vite] (client) page reload temp/test-undo-redo.js
+1:51:58 PM [vite] (client) hmr update /src/components/Canvas/Canvas.tsx, /src/index.css
+1:52:06 PM [vite] (client) hmr update /src/components/Canvas/Canvas.tsx, /src/index.css
+1:52:06 PM [vite] Internal server error: /Users/kay/Project/mindmapify/src/components/Canvas/Canvas.tsx: Identifier 'addNode' has already been declared. (399:10)
+
+  397 |
+  398 |   // Add node functionality for shortcuts
+> 399 |   const { addNode } = useMindmapStore();
+      |           ^
+  400 |
+  401 |   // Keyboard shortcuts with multi-key support
+  402 |   useEffect(() => {
+  Plugin: vite:react-babel
+  File: /Users/kay/Project/mindmapify/src/components/Canvas/Canvas.tsx:399:10
+  397|  
+  398|    // Add node functionality for shortcuts
+  399|    const { addNode } = useMindmapStore();
+     |            ^
+  400|  
+  401|    // Keyboard shortcuts with multi-key support
+      at constructor (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:367:19)
+      at TypeScriptParserMixin.raise (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:6627:19)
+      at TypeScriptScopeHandler.checkRedeclarationInScope (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:1644:19)
+      at TypeScriptScopeHandler.declareName (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:1610:12)
+      at TypeScriptScopeHandler.declareName (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:4910:11)
+      at TypeScriptParserMixin.declareNameFromIdentifier (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:7591:16)
+      at TypeScriptParserMixin.checkIdentifier (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:7587:12)
+      at TypeScriptParserMixin.checkLVal (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:7526:12)
+      at TypeScriptParserMixin.checkLVal (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:7568:12)
+      at TypeScriptParserMixin.checkLVal (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:7564:16)
+      at TypeScriptParserMixin.parseVarId (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:13412:10)
+      at TypeScriptParserMixin.parseVarId (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:9767:11)
+      at TypeScriptParserMixin.parseVar (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:13383:12)
+      at TypeScriptParserMixin.parseVarStatement (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:13230:10)
+      at TypeScriptParserMixin.parseVarStatement (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:9493:31)
+      at TypeScriptParserMixin.parseStatementContent (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:12851:23)
+      at TypeScriptParserMixin.parseStatementContent (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:9527:18)
+      at TypeScriptParserMixin.parseStatementLike (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:12767:17)
+      at TypeScriptParserMixin.parseStatementListItem (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:12747:17)
+      at TypeScriptParserMixin.parseBlockOrModuleBlockBody (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:13316:61)
+      at TypeScriptParserMixin.parseBlockBody (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:13309:10)
+      at TypeScriptParserMixin.parseBlock (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:13297:10)
+      at TypeScriptParserMixin.parseFunctionBody (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:12101:24)
+      at TypeScriptParserMixin.parseArrowExpression (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:12076:10)
+      at TypeScriptParserMixin.parseParenAndDistinguishExpression (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:11686:12)
+      at TypeScriptParserMixin.parseExprAtom (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:11326:23)
+      at TypeScriptParserMixin.parseExprAtom (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:4794:20)
+      at TypeScriptParserMixin.parseExprSubscripts (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:11076:23)
+      at TypeScriptParserMixin.parseUpdate (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:11061:21)
+      at TypeScriptParserMixin.parseMaybeUnary (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:11041:23)
+      at TypeScriptParserMixin.parseMaybeUnary (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:9852:18)
+      at TypeScriptParserMixin.parseMaybeUnaryOrPrivate (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:10894:61)
+      at TypeScriptParserMixin.parseExprOps (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:10899:23)
+      at TypeScriptParserMixin.parseMaybeConditional (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:10876:23)
+      at TypeScriptParserMixin.parseMaybeAssign (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:10826:21)
+      at TypeScriptParserMixin.parseMaybeAssign (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:9801:20)
+      at /Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:10795:39
+      at TypeScriptParserMixin.allowInAnd (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:12422:16)
+      at TypeScriptParserMixin.parseMaybeAssignAllowIn (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:10795:17)
+      at TypeScriptParserMixin.parseVar (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:13384:91)
+      at TypeScriptParserMixin.parseVarStatement (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:13230:10)
+      at TypeScriptParserMixin.parseVarStatement (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:9493:31)
+      at TypeScriptParserMixin.parseStatementContent (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:12851:23)
+      at TypeScriptParserMixin.parseStatementContent (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:9527:18)
+      at TypeScriptParserMixin.parseStatementLike (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:12767:17)
+      at TypeScriptParserMixin.parseStatementListItem (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:12747:17)
+      at TypeScriptParserMixin.parseExportDeclaration (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:13934:17)
+      at TypeScriptParserMixin.parseExportDeclaration (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:9652:85)
+      at TypeScriptParserMixin.maybeParseExportDeclaration (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:13893:31)
+      at TypeScriptParserMixin.parseExport (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:13812:29)
+1:52:10 PM [vite] (client) hmr update /src/components/Canvas/Canvas.tsx, /src/index.css
+1:52:17 PM [vite] (client) page reload temp/test-undo-redo.js
+1:52:44 PM [vite] (client) page reload scripts/quick-test.js
+1:53:41 PM [vite] (client) hmr update /src/components/Canvas/Canvas.tsx, /src/index.css

@@ -69,11 +69,21 @@ export const useMindmapStore = create<MindmapState & MindmapActions>()(
       });
     },
 
-    updateNode: (id: string, updates: Partial<Node>) => {
+    updateNode: (id: string, updates: Partial<Node>, saveHistory = false) => {
       set((state) => {
         const nodeIndex = state.nodes.findIndex(node => node.id === id);
         if (nodeIndex !== -1) {
           Object.assign(state.nodes[nodeIndex], updates);
+          
+          // Save to history if explicitly requested (e.g., drag end)
+          if (saveHistory) {
+            state.history.past.push(state.history.present);
+            state.history.present = {
+              nodes: [...state.nodes],
+              connections: [...state.connections],
+            };
+            state.history.future = [];
+          }
         }
       });
     },
@@ -107,6 +117,7 @@ export const useMindmapStore = create<MindmapState & MindmapActions>()(
       set((state) => {
         // Clear all selections first
         state.nodes.forEach(node => node.isSelected = false);
+        state.connections.forEach(conn => conn.isSelected = false);
         state.selectedConnectionId = undefined;
         
         // Set new selection

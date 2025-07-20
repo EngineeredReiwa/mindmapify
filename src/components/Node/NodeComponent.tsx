@@ -106,7 +106,7 @@ export const NodeComponent: React.FC<NodeComponentProps> = ({ node }) => {
         width: finalWidth,
         height: finalHeight,
       }
-    });
+    }, true); // true = save to history
     stopEditing(node.id);
     selectNode(undefined); // Clear selection after save
   };
@@ -553,12 +553,13 @@ export const NodeComponent: React.FC<NodeComponentProps> = ({ node }) => {
     // Get the actual position
     const position = e.target.position();
     
+    // Update node position and save to history (for undo/redo)
     updateNode(node.id, {
       position: {
         x: position.x,
         y: position.y,
       },
-    });
+    }, true); // true = save to history
   };
 
   // Visual style based on state

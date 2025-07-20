@@ -18,7 +18,7 @@ export const Canvas: React.FC<CanvasProps> = ({ width, height, onCanvasClick }) 
   const canvasState = useCanvasState();
   const nodes = useNodes();
   const connections = useConnections();
-  const { setCanvasOffset, setCanvasZoom, setCanvasDragging, selectNode, selectConnection, deleteConnection, deleteNode, updateConnectionPreview, endConnection, stopAllEditing, saveAndStopAllEditing, startEditingConnectionLabel, updateConnection, stopEditingConnectionLabel, cancelConnectionEndpointEdit, startEditingConnectionEndpoint, updateConnectionEndpoint } = useMindmapStore();
+  const { setCanvasOffset, setCanvasZoom, setCanvasDragging, selectNode, selectConnection, deleteConnection, deleteNode, updateConnectionPreview, endConnection, stopAllEditing, saveAndStopAllEditing, startEditingConnectionLabel, updateConnection, stopEditingConnectionLabel, cancelConnectionEndpointEdit, startEditingConnectionEndpoint, updateConnectionEndpoint, undo, redo, addNode } = useMindmapStore();
 
   // Track last click time for double-click detection
   const lastClickTimeRef = useRef<number>(0);
@@ -299,6 +299,8 @@ export const Canvas: React.FC<CanvasProps> = ({ width, height, onCanvasClick }) 
       selectConnection(undefined);
       saveAndStopAllEditing();
       
+      const stage = e.target.getStage();
+      const pointer = stage.getPointerPosition();
       if (pointer) {
         // Convert screen coordinates to canvas coordinates
         const canvasPosition = {
@@ -391,7 +393,12 @@ export const Canvas: React.FC<CanvasProps> = ({ width, height, onCanvasClick }) 
     e.target.getStage().draggable(false);
   };
 
-  // Keyboard shortcuts
+  // Multi-key shortcut state
+  const keySequenceRef = useRef<string[]>([]);
+  const sequenceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+
+  // Keyboard shortcuts with multi-key support
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Check if any node is being edited - if so, don't handle global shortcuts
@@ -400,9 +407,52 @@ export const Canvas: React.FC<CanvasProps> = ({ width, height, onCanvasClick }) 
         return; // Allow node editing to handle its own keyboard events
       }
 
-      // Prevent default browser shortcuts when canvas is focused
+      // Only handle shortcuts when canvas is focused
       if (e.target === document.body) {
-        if (e.key === '0' && (e.ctrlKey || e.metaKey)) {
+        const isCommandKey = e.ctrlKey || e.metaKey;
+        
+        // Handle multi-key sequences
+        if (isCommandKey) {
+          // Clear existing timeout
+          if (sequenceTimeoutRef.current) {
+            clearTimeout(sequenceTimeoutRef.current);
+          }
+          
+          // Add key to sequence
+          keySequenceRef.current.push(e.key.toLowerCase());
+          
+          // Set timeout to reset sequence after 1.5 seconds
+          sequenceTimeoutRef.current = setTimeout(() => {
+            keySequenceRef.current = [];
+          }, 1500);
+          
+          const currentSequence = keySequenceRef.current.join('');
+          
+          // Check for multi-key shortcuts
+          if (currentSequence === 'an') {
+            // Command+A+N: Add Node
+            e.preventDefault();
+            const centerPosition = { x: 300, y: 200 };
+            addNode(centerPosition, 'New Node');
+            keySequenceRef.current = [];
+            return;
+          } else if (currentSequence === 'dn') {
+            // Command+D+N: Delete Node
+            e.preventDefault();
+            const selectedNode = nodes.find(node => node.isSelected);
+            if (selectedNode) {
+              deleteNode(selectedNode.id);
+            }
+            keySequenceRef.current = [];
+            return;
+          }
+        } else {
+          // Reset sequence for non-command keys
+          keySequenceRef.current = [];
+        }
+
+        // Handle single-key shortcuts
+        if (e.key === '0' && isCommandKey) {
           e.preventDefault();
           // Reset zoom and center
           setCanvasZoom(1);
@@ -433,13 +483,39 @@ export const Canvas: React.FC<CanvasProps> = ({ width, height, onCanvasClick }) 
             selectNode(undefined);
             selectConnection(undefined);
           }
+        } else if (e.key === 'z' && isCommandKey && !e.shiftKey) {
+          e.preventDefault();
+          // Command+Z: Undo
+          undo();
+        } else if ((e.key === 'y' && isCommandKey) || (e.key === 'z' && isCommandKey && e.shiftKey)) {
+          e.preventDefault();
+          // Command+Y or Command+Shift+Z: Redo
+          redo();
         }
       }
     };
 
+    const handleKeyUp = (e: KeyboardEvent) => {
+      // Reset sequence when command key is released
+      if (!e.ctrlKey && !e.metaKey) {
+        if (sequenceTimeoutRef.current) {
+          clearTimeout(sequenceTimeoutRef.current);
+        }
+        keySequenceRef.current = [];
+      }
+    };
+
     document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [setCanvasZoom, setCanvasOffset, nodes, connections, deleteNode, deleteConnection, selectNode, selectConnection]);
+    document.addEventListener('keyup', handleKeyUp);
+    
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('keyup', handleKeyUp);
+      if (sequenceTimeoutRef.current) {
+        clearTimeout(sequenceTimeoutRef.current);
+      }
+    };
+  }, [setCanvasZoom, setCanvasOffset, nodes, connections, deleteNode, deleteConnection, selectNode, selectConnection, undo, redo, canvasState.isEditingConnection, cancelConnectionEndpointEdit, addNode]);
 
   return (
     <div className="canvas-container" style={{ width, height, overflow: 'hidden' }}>
