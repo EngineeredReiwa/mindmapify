@@ -23,13 +23,24 @@ export const ConnectionLabelEditor: React.FC<ConnectionLabelEditorProps> = ({
     RELATION_LABELS.includes(currentLabel as RelationLabel) ? currentLabel : ''
   );
 
-  // Escapeキーでキャンセル
+  // キーボードショートカット（Escape + 数字キー1-8）
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         e.preventDefault();
         e.stopPropagation();
         onCancel();
+        return;
+      }
+      
+      // 数字キー1-8で関係性ラベルを選択
+      const numberKey = parseInt(e.key);
+      if (numberKey >= 1 && numberKey <= 8 && numberKey <= RELATION_LABELS.length) {
+        e.preventDefault();
+        e.stopPropagation();
+        const selectedLabel = RELATION_LABELS[numberKey - 1]; // 1-indexed to 0-indexed
+        onSave(selectedLabel);
+        return;
       }
     };
 
@@ -37,7 +48,7 @@ export const ConnectionLabelEditor: React.FC<ConnectionLabelEditorProps> = ({
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [onCancel]);
+  }, [onCancel, onSave]);
 
   const handlePresetClick = (label: string) => {
     setSelectedPreset(label);
@@ -89,7 +100,7 @@ export const ConnectionLabelEditor: React.FC<ConnectionLabelEditorProps> = ({
 
       {/* Title */}
       <Text
-        text="接続ラベルを選択"
+        text="接続ラベルを選択（数字キー1-8）"
         x={10}
         y={10}
         width={editorWidth - 20}
@@ -123,7 +134,7 @@ export const ConnectionLabelEditor: React.FC<ConnectionLabelEditorProps> = ({
               style={{ cursor: 'pointer' }}
             />
             <Text
-              text={label}
+              text={`${index + 1}. ${label}`}
               x={x}
               y={y}
               width={buttonWidth}

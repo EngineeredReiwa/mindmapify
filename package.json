@@ -10,11 +10,15 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
-    "test:e2e": "node scripts/e2e-test.js",
-    "test:quick": "node scripts/quick-test.js",
-    "test:debug": "node scripts/debug-test.js",
-    "test:drag": "node scripts/drag-debug-test.js",
-    "test:dev": "npm run dev & sleep 3 && npm run test:e2e"
+    "test:suite": "node test-suite.js",
+    "test:quick": "node test-suite.js --quick --headless",
+    "test:debug": "node test-suite.js --debug",
+    "test:full": "node test-suite.js --full --headless",
+    "test:specific": "node test-suite.js --specific",
+    "test:workflows": "node test-suite.js --specific=workflows --debug",
+    "test:help": "node test-suite.js --help",
+    "test:e2e": "npm run dev & sleep 3 && npm run test:full && pkill -f vite",
+    "test:dev": "npm run dev & sleep 3 && npm run test:debug; pkill -f vite"
   },
   "dependencies": {
     "immer": "^10.1.1",

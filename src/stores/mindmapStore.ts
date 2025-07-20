@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 import { v4 as uuidv4 } from 'uuid';
+import { determineConnectionSides } from '../utils/connectionUtils';
 import type { 
   MindmapState, 
   MindmapActions, 
@@ -155,6 +156,15 @@ export const useMindmapStore = create<MindmapState & MindmapActions>()(
 
     startEditing: (id: string) => {
       set((state) => {
+        // First, auto-save and stop any connection editing to prevent conflicts
+        if (state.canvas.isEditingConnection) {
+          console.log('🔧 Store: Auto-stopping connection editing before node editing');
+          state.canvas.isEditingConnection = false;
+          state.canvas.editingConnectionId = undefined;
+          state.canvas.editingEndpoint = undefined;
+          state.canvas.editingPreviewPosition = undefined;
+        }
+        
         const node = state.nodes.find(n => n.id === id);
         if (node) {
           node.isEditing = true;
@@ -201,10 +211,23 @@ export const useMindmapStore = create<MindmapState & MindmapActions>()(
         );
         
         if (!exists && fromId !== toId) {
+          // Find the nodes to determine connection sides
+          const fromNode = state.nodes.find(n => n.id === fromId);
+          const toNode = state.nodes.find(n => n.id === toId);
+          
+          let fromSide, toSide;
+          if (fromNode && toNode) {
+            const sides = determineConnectionSides(fromNode, toNode);
+            fromSide = sides.fromSide;
+            toSide = sides.toSide;
+          }
+          
           const newConnection = {
             id: uuidv4(),
             from: fromId,
             to: toId,
+            fromSide,
+            toSide,
             isSelected: false,
           };
           
@@ -296,9 +319,21 @@ export const useMindmapStore = create<MindmapState & MindmapActions>()(
 
     startEditingConnectionEndpoint: (connectionId: string, endpoint: 'start' | 'end') => {
       set((state) => {
+        // First, auto-save and stop any node editing to prevent conflicts
+        const editingNodes = state.nodes.filter(node => node.isEditing);
+        if (editingNodes.length > 0) {
+          console.log('🔧 Store: Auto-saving editing nodes before connection editing:', editingNodes.map(n => n.id));
+          editingNodes.forEach(node => {
+            // Auto-save the current editing text and stop editing
+            node.isEditing = false;
+          });
+        }
+        
+        // Now start connection editing
         state.canvas.isEditingConnection = true;
         state.canvas.editingConnectionId = connectionId;
         state.canvas.editingEndpoint = endpoint;
+        state.canvas.editingPreviewPosition = undefined; // Clear preview position
       });
     },
 
@@ -317,13 +352,28 @@ export const useMindmapStore = create<MindmapState & MindmapActions>()(
           state.history.past.push(state.history.present);
           state.history.future = [];
           
-          // Update the appropriate endpoint
+          // Update the appropriate endpoint and recalculate connection sides
+          const fromNode = state.nodes.find(n => n.id === connection.from);
+          const toNode = state.nodes.find(n => n.id === connection.to);
+          let newFromNode = fromNode;
+          let newToNode = toNode;
+          
           if (endpoint === 'start') {
             connection.from = newNodeId;
+            newFromNode = state.nodes.find(n => n.id === newNodeId);
             console.log('🔧 Store: Updated start endpoint to:', newNodeId);
           } else {
             connection.to = newNodeId;
+            newToNode = state.nodes.find(n => n.id === newNodeId);
             console.log('🔧 Store: Updated end endpoint to:', newNodeId);
+          }
+          
+          // Recalculate connection sides for the new connection
+          if (newFromNode && newToNode) {
+            const sides = determineConnectionSides(newFromNode, newToNode);
+            connection.fromSide = sides.fromSide;
+            connection.toSide = sides.toSide;
+            console.log('🔧 Store: Updated connection sides:', sides);
           }
           
           console.log('🔧 Store: After update - connection.from:', connection.from, 'connection.to:', connection.to);
@@ -338,6 +388,7 @@ export const useMindmapStore = create<MindmapState & MindmapActions>()(
           state.canvas.isEditingConnection = false;
           state.canvas.editingConnectionId = undefined;
           state.canvas.editingEndpoint = undefined;
+          state.canvas.editingPreviewPosition = undefined;
           
           console.log('🔧 Store: Editing state cleared');
         } else {
@@ -351,6 +402,7 @@ export const useMindmapStore = create<MindmapState & MindmapActions>()(
         state.canvas.isEditingConnection = false;
         state.canvas.editingConnectionId = undefined;
         state.canvas.editingEndpoint = undefined;
+        state.canvas.editingPreviewPosition = undefined;
       });
     },
 
@@ -411,6 +463,14 @@ export const useMindmapStore = create<MindmapState & MindmapActions>()(
       });
     },
 
+    updateEditingPreview: (mousePosition: Position) => {
+      set((state) => {
+        if (state.canvas.isEditingConnection) {
+          state.canvas.editingPreviewPosition = mousePosition;
+        }
+      });
+    },
+
     endConnection: (targetConnectionPointId?: string) => {
       set((state) => {
         if (state.canvas.isConnecting && state.canvas.connectionStartPoint) {
@@ -429,10 +489,23 @@ export const useMindmapStore = create<MindmapState & MindmapActions>()(
               );
               
               if (!exists) {
+                // Find the nodes to determine connection sides
+                const fromNode = state.nodes.find(n => n.id === fromNodeId);
+                const toNode = state.nodes.find(n => n.id === toNodeId);
+                
+                let fromSide, toSide;
+                if (fromNode && toNode) {
+                  const sides = determineConnectionSides(fromNode, toNode);
+                  fromSide = sides.fromSide;
+                  toSide = sides.toSide;
+                }
+                
                 const newConnection = {
                   id: uuidv4(),
                   from: fromNodeId,
                   to: toNodeId,
+                  fromSide,
+                  toSide,
                   isSelected: false,
                 };
                 

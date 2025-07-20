@@ -45,6 +45,8 @@ export interface Connection {
   id: string;
   from: string; // Node ID
   to: string;   // Node ID
+  fromSide?: 'top' | 'right' | 'bottom' | 'left'; // Fixed connection point on source node
+  toSide?: 'top' | 'right' | 'bottom' | 'left';   // Fixed connection point on target node
   label?: string; // Relationship label
   style?: ConnectionStyle;
   isSelected?: boolean;
@@ -62,6 +64,7 @@ export interface CanvasState {
   isEditingConnection?: boolean; // Whether editing connection endpoints
   editingConnectionId?: string; // ID of connection being edited
   editingEndpoint?: 'start' | 'end'; // Which endpoint is being modified
+  editingPreviewPosition?: Position; // Mouse position during endpoint editing for preview
 }
 
 export interface MindmapState {
@@ -115,6 +118,7 @@ export interface CanvasActions {
   setCanvasDragging: (isDragging: boolean) => void;
   startConnection: (connectionPointId: string, startPosition: Position) => void;
   updateConnectionPreview: (endPosition: Position) => void;
+  updateEditingPreview: (mousePosition: Position) => void;
   endConnection: (targetConnectionPointId?: string) => void;
 }
 

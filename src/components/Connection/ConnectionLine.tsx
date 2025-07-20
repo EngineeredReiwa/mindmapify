@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Line, Circle, Text, Group, Rect } from 'react-konva';
 import { useMindmapStore } from '../../stores/mindmapStore';
+import { getConnectionPointPosition, determineConnectionSides } from '../../utils/connectionUtils';
 import type { Connection, Node, Position } from '../../types';
 
 interface ConnectionLineProps {
@@ -22,42 +23,25 @@ export const ConnectionLine: React.FC<ConnectionLineProps> = ({ connection }) =>
     return null; // Don't render if nodes are missing
   }
 
-  // Calculate connection points on node edges
-  const getConnectionPoint = (node: Node, targetNode: Node): Position => {
-    const fromCenter = {
-      x: node.position.x + node.size.width / 2,
-      y: node.position.y + node.size.height / 2,
-    };
-    const toCenter = {
-      x: targetNode.position.x + targetNode.size.width / 2,
-      y: targetNode.position.y + targetNode.size.height / 2,
-    };
-
-    // Calculate direction vector
-    const dx = toCenter.x - fromCenter.x;
-    const dy = toCenter.y - fromCenter.y;
-    const distance = Math.sqrt(dx * dx + dy * dy);
-
-    if (distance === 0) return fromCenter;
-
-    // Normalize direction
-    const unitX = dx / distance;
-    const unitY = dy / distance;
-
-    // Calculate edge point (offset by half node size)
-    const edgeOffset = {
-      x: unitX * (node.size.width / 2),
-      y: unitY * (node.size.height / 2),
-    };
-
-    return {
-      x: fromCenter.x + edgeOffset.x,
-      y: fromCenter.y + edgeOffset.y,
-    };
+  // Calculate fixed connection points based on stored sides or determine them
+  const getFixedConnectionPoints = (): { startPoint: Position; endPoint: Position } => {
+    let fromSide = connection.fromSide;
+    let toSide = connection.toSide;
+    
+    // If sides are not stored (legacy connections), determine them now
+    if (!fromSide || !toSide) {
+      const sides = determineConnectionSides(fromNode, toNode);
+      fromSide = sides.fromSide;
+      toSide = sides.toSide;
+    }
+    
+    const startPoint = getConnectionPointPosition(fromNode, fromSide);
+    const endPoint = getConnectionPointPosition(toNode, toSide);
+    
+    return { startPoint, endPoint };
   };
 
-  const startPoint = getConnectionPoint(fromNode, toNode);
-  const endPoint = getConnectionPoint(toNode, fromNode);
+  const { startPoint, endPoint } = getFixedConnectionPoints();
 
   // Create smooth curve using quadratic bezier
   const controlPoint = {
@@ -65,23 +49,30 @@ export const ConnectionLine: React.FC<ConnectionLineProps> = ({ connection }) =>
     y: (startPoint.y + endPoint.y) / 2 - 50, // Curve upward slightly
   };
 
-  // Calculate arrow direction and position
-  const dx = endPoint.x - startPoint.x;
-  const dy = endPoint.y - startPoint.y;
+  // Calculate arrow direction using curve tangent at end point for better accuracy
+  // For quadratic bezier, tangent at end point is direction from control point to end point
+  const dx = endPoint.x - controlPoint.x;
+  const dy = endPoint.y - controlPoint.y;
   const angle = Math.atan2(dy, dx);
   
-  // Arrow head size
-  const arrowLength = 12;
+  // Arrow head size - visible but not too large
+  const arrowLength = 8;
+  const arrowOffset = 6; // Enough offset to clear connection points
   
-  // Calculate arrow head points
-  const arrowTip = endPoint;
+  // Calculate arrow tip position with offset to avoid connection point overlap
+  const arrowTip = {
+    x: endPoint.x - arrowOffset * Math.cos(angle),
+    y: endPoint.y - arrowOffset * Math.sin(angle),
+  };
+  
+  // Calculate arrow head points with wider angle for better visibility
   const arrowBase1 = {
-    x: arrowTip.x - arrowLength * Math.cos(angle - Math.PI / 6),
-    y: arrowTip.y - arrowLength * Math.sin(angle - Math.PI / 6),
+    x: arrowTip.x - arrowLength * Math.cos(angle - Math.PI / 5),
+    y: arrowTip.y - arrowLength * Math.sin(angle - Math.PI / 5),
   };
   const arrowBase2 = {
-    x: arrowTip.x - arrowLength * Math.cos(angle + Math.PI / 6),
-    y: arrowTip.y - arrowLength * Math.sin(angle + Math.PI / 6),
+    x: arrowTip.x - arrowLength * Math.cos(angle + Math.PI / 5),
+    y: arrowTip.y - arrowLength * Math.sin(angle + Math.PI / 5),
   };
 
   // Calculate label position (middle of the line)
@@ -90,12 +81,13 @@ export const ConnectionLine: React.FC<ConnectionLineProps> = ({ connection }) =>
     y: (startPoint.y + endPoint.y) / 2 - 25,
   };
 
-  // Line style based on selection state - improved visibility
+  // Line style based on selection state - adjusted for editing mode
+  const isEditingThis = canvasState.isEditingConnection && canvasState.editingConnectionId === connection.id;
   const strokeColor = connection.isSelected ? '#007bff' : '#495057';
-  const strokeWidth = connection.isSelected ? 4 : 2.5;
+  const strokeWidth = isEditingThis ? 2 : (connection.isSelected ? 3 : 2);
   const opacity = connection.isSelected ? 1 : 0.8;
-  const shadowBlur = connection.isSelected ? 12 : 0;
-  const shadowColor = connection.isSelected ? 'rgba(0, 123, 255, 0.5)' : 'transparent';
+  const shadowBlur = connection.isSelected ? 8 : 0;
+  const shadowColor = connection.isSelected ? 'rgba(0, 123, 255, 0.3)' : 'transparent';
 
   const handleClick = (e: any) => {
     // Stop event propagation to prevent canvas stage from processing this click
@@ -195,12 +187,12 @@ export const ConnectionLine: React.FC<ConnectionLineProps> = ({ connection }) =>
         perfectDrawEnabled={false}
       />
       
-      {/* Main connection line */}
+      {/* Main connection line - extended to arrow base */}
       <Line
         points={[
           startPoint.x, startPoint.y,
           controlPoint.x, controlPoint.y,
-          endPoint.x, endPoint.y,
+          arrowTip.x + (arrowLength * 0.7) * Math.cos(angle), arrowTip.y + (arrowLength * 0.7) * Math.sin(angle),
         ]}
         stroke={strokeColor}
         strokeWidth={strokeWidth}
@@ -216,7 +208,7 @@ export const ConnectionLine: React.FC<ConnectionLineProps> = ({ connection }) =>
         perfectDrawEnabled={false}
       />
       
-      {/* Triangular arrowhead at the end */}
+      {/* Triangular arrowhead at the end - improved visibility */}
       <Line
         points={[
           arrowTip.x, arrowTip.y,
@@ -225,17 +217,13 @@ export const ConnectionLine: React.FC<ConnectionLineProps> = ({ connection }) =>
           arrowTip.x, arrowTip.y,
         ]}
         fill={strokeColor}
-        stroke={strokeColor}
-        strokeWidth={connection.isSelected ? 2 : 1}
-        opacity={opacity}
+        stroke="none"
+        opacity={1}
         closed={true}
         onClick={handleClick}
         onTap={handleClick}
         onDblClick={handleDoubleClick}
         onDblTap={handleDoubleClick}
-        shadowBlur={shadowBlur}
-        shadowColor={shadowColor}
-        shadowOffsetY={connection.isSelected ? 3 : 0}
         listening={true} // Explicitly enable event listening
         name="connection-arrow" // For debugging
         perfectDrawEnabled={false} // Improve performance
@@ -314,18 +302,18 @@ export const ConnectionLine: React.FC<ConnectionLineProps> = ({ connection }) =>
         </Group>
       )}
       
-      {/* Show editing handles when in editing mode */}
+      {/* Show editing handles when in editing mode - smaller size */}
       {canvasState.isEditingConnection && canvasState.editingConnectionId === connection.id && (
         <Group name="connection-editing-handles" listening={false}>
           <Circle
             x={startPoint.x}
             y={startPoint.y}
-            radius={15}
+            radius={8}
             fill={canvasState.editingEndpoint === 'start' ? "#ffc107" : "#28a745"}
             stroke="#ffffff"
-            strokeWidth={3}
-            shadowBlur={6}
-            shadowColor="rgba(255,193,7,0.5)"
+            strokeWidth={1}
+            shadowBlur={3}
+            shadowColor="rgba(255,193,7,0.3)"
             listening={false}
             name="start-handle-editing"
           />
@@ -333,12 +321,12 @@ export const ConnectionLine: React.FC<ConnectionLineProps> = ({ connection }) =>
           <Circle
             x={endPoint.x}
             y={endPoint.y}
-            radius={15}
+            radius={8}
             fill={canvasState.editingEndpoint === 'end' ? "#ffc107" : "#dc3545"}
             stroke="#ffffff"
-            strokeWidth={3}
-            shadowBlur={6}
-            shadowColor="rgba(255,193,7,0.5)"
+            strokeWidth={1}
+            shadowBlur={3}
+            shadowColor="rgba(255,193,7,0.3)"
             listening={false}
             name="end-handle-editing"
           />

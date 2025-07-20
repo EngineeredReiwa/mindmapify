@@ -1,6 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import { Stage, Layer, Text, Group, Circle } from 'react-konva';
 import { useMindmapStore, useCanvasState, useNodes, useConnections } from '../../stores/mindmapStore';
+import { getConnectionPointPosition } from '../../utils/connectionUtils';
 import { NodeComponent } from '../Node/NodeComponent';
 import { ConnectionLine } from '../Connection/ConnectionLine';
 import { ConnectionLabelEditor } from '../Connection/ConnectionLabelEditor';
@@ -18,7 +19,7 @@ export const Canvas: React.FC<CanvasProps> = ({ width, height, onCanvasClick }) 
   const canvasState = useCanvasState();
   const nodes = useNodes();
   const connections = useConnections();
-  const { setCanvasOffset, setCanvasZoom, setCanvasDragging, selectNode, selectConnection, selectAll, clearSelection, deleteConnection, deleteNode, updateConnectionPreview, endConnection, stopAllEditing, saveAndStopAllEditing, startEditingConnectionLabel, updateConnection, stopEditingConnectionLabel, cancelConnectionEndpointEdit, startEditingConnectionEndpoint, updateConnectionEndpoint, undo, redo, addNode } = useMindmapStore();
+  const { setCanvasOffset, setCanvasZoom, setCanvasDragging, selectNode, selectConnection, selectAll, clearSelection, deleteConnection, deleteNode, updateConnectionPreview, updateEditingPreview, endConnection, stopAllEditing, saveAndStopAllEditing, startEditingConnectionLabel, updateConnection, stopEditingConnectionLabel, cancelConnectionEndpointEdit, startEditingConnectionEndpoint, updateConnectionEndpoint, undo, redo, addNode } = useMindmapStore();
 
   // Track last click time for double-click detection
   const lastClickTimeRef = useRef<number>(0);
@@ -322,20 +323,26 @@ export const Canvas: React.FC<CanvasProps> = ({ width, height, onCanvasClick }) 
     }
   };
 
-  // Handle mouse move for connection preview
+  // Handle mouse move for connection preview and endpoint editing preview
   const handleStageMouseMove = (e: any) => {
-    if (canvasState.isConnecting) {
-      const stage = e.target.getStage();
-      const pointer = stage.getPointerPosition();
+    const stage = e.target.getStage();
+    const pointer = stage.getPointerPosition();
+    
+    if (pointer) {
+      // Convert screen coordinates to canvas coordinates
+      const canvasPosition = {
+        x: (pointer.x - canvasState.offset.x) / canvasState.zoom,
+        y: (pointer.y - canvasState.offset.y) / canvasState.zoom,
+      };
       
-      if (pointer) {
-        // Convert screen coordinates to canvas coordinates
-        const canvasPosition = {
-          x: (pointer.x - canvasState.offset.x) / canvasState.zoom,
-          y: (pointer.y - canvasState.offset.y) / canvasState.zoom,
-        };
-        
+      // Handle initial connection preview
+      if (canvasState.isConnecting) {
         updateConnectionPreview(canvasPosition);
+      }
+      
+      // Handle endpoint editing preview
+      if (canvasState.isEditingConnection) {
+        updateEditingPreview(canvasPosition);
       }
     }
   };
@@ -668,7 +675,7 @@ export const Canvas: React.FC<CanvasProps> = ({ width, height, onCanvasClick }) 
         clearTimeout(sequenceTimeoutRef.current);
       }
     };
-  }, [setCanvasZoom, setCanvasOffset, nodes, connections, deleteNode, deleteConnection, selectNode, selectConnection, undo, redo, canvasState.isEditingConnection, cancelConnectionEndpointEdit, addNode]);
+  }, [setCanvasZoom, setCanvasOffset, nodes, connections, deleteNode, deleteConnection, selectNode, selectConnection, undo, redo, canvasState.isEditingConnection, cancelConnectionEndpointEdit, addNode, updateEditingPreview]);
 
   return (
     <div className="canvas-container" style={{ width, height, overflow: 'hidden' }}>
@@ -720,6 +727,41 @@ export const Canvas: React.FC<CanvasProps> = ({ width, height, onCanvasClick }) 
               endPoint={canvasState.connectionEndPosition}
             />
           )}
+          
+          {/* Render endpoint editing preview (dashed arrow) */}
+          {canvasState.isEditingConnection && 
+           canvasState.editingConnectionId && 
+           canvasState.editingPreviewPosition && 
+           (() => {
+             // Calculate preview start point based on editing endpoint
+             const editingConnection = connections.find(conn => conn.id === canvasState.editingConnectionId);
+             if (!editingConnection) return null;
+             
+             const fromNode = nodes.find(n => n.id === editingConnection.from);
+             const toNode = nodes.find(n => n.id === editingConnection.to);
+             if (!fromNode || !toNode) return null;
+             
+             // Determine which point is fixed and which is being edited
+             let fixedPoint: Position;
+             let editingPoint: Position = canvasState.editingPreviewPosition;
+             
+             if (canvasState.editingEndpoint === 'start') {
+               // Editing start point, so end point is fixed
+               const toSide = editingConnection.toSide || 'left';
+               fixedPoint = getConnectionPointPosition(toNode, toSide);
+             } else {
+               // Editing end point, so start point is fixed  
+               const fromSide = editingConnection.fromSide || 'right';
+               fixedPoint = getConnectionPointPosition(fromNode, fromSide);
+             }
+             
+             return (
+               <DashedArrow
+                 startPoint={canvasState.editingEndpoint === 'start' ? editingPoint : fixedPoint}
+                 endPoint={canvasState.editingEndpoint === 'end' ? editingPoint : fixedPoint}
+               />
+             );
+           })()}
           
           {/* Render nodes (in front of connections) */}
           {nodes.map(node => (

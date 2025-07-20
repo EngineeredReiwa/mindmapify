@@ -607,7 +607,7 @@ export const NodeComponent: React.FC<NodeComponentProps> = ({ node }) => {
       
       {/* Direct Konva text editing - no overlay needed */}
       
-      {/* Connection points - always shown when not editing (original behavior) */}
+      {/* Connection points (background layer) - always shown when not editing */}
       {!node.isEditing && (() => {
         const store = useMindmapStore.getState();
         
@@ -632,7 +632,7 @@ export const NodeComponent: React.FC<NodeComponentProps> = ({ node }) => {
         return true;
       })() && connectionPoints.map((point) => (
         <ConnectionPointComponent
-          key={point.id}
+          key={`bg-${point.id}`}
           connectionPoint={{
             ...point,
             isHovered: hoveredConnectionPoint === point.id,
@@ -649,29 +649,39 @@ export const NodeComponent: React.FC<NodeComponentProps> = ({ node }) => {
       {/* Editing hint - shown when editing */}
       {node.isEditing && (
         <Group>
-          {/* Hint background */}
-          <Rect
-            x={0}
-            y={node.size.height + 8}
-            width={Math.max(node.size.width, 280)}
-            height={24}
-            fill="rgba(0, 123, 255, 0.1)"
-            stroke="#007bff"
-            strokeWidth={1}
-            cornerRadius={4}
-          />
-          {/* Hint text */}
+          {/* Hint text - no background box */}
           <Text
             text="Ctrl+Enter: 保存 | Esc: キャンセル | 外クリック: 自動保存"
             x={8}
-            y={node.size.height + 14}
-            fontSize={11}
+            y={node.size.height + 12}
+            fontSize={10}
             fontFamily="Arial, sans-serif"
-            fill="#007bff"
+            fill="#6c757d"
             align="left"
           />
         </Group>
       )}
+
+      {/* Connection points (top layer) - shown during node editing or connection editing mode */}
+      {(node.isEditing || (canvasState.isEditingConnection && (() => {
+        const store = useMindmapStore.getState();
+        const editingConnection = store.connections.find(c => c.id === canvasState.editingConnectionId);
+        return editingConnection && (editingConnection.from !== node.id && editingConnection.to !== node.id);
+      })())) && connectionPoints.map((point) => (
+        <ConnectionPointComponent
+          key={`top-${point.id}`}
+          connectionPoint={{
+            ...point,
+            isHovered: hoveredConnectionPoint === point.id,
+            isActive: activeConnectionPoint === point.id,
+          }}
+          nodeSize={node.size}
+          onMouseEnter={() => handleConnectionPointMouseEnter(point.id)}
+          onMouseLeave={() => handleConnectionPointMouseLeave()}
+          onMouseDown={(e) => handleConnectionPointMouseDown(point.id, e)}
+          onMouseUp={(e) => handleConnectionPointMouseUp(point.id, e)}
+        />
+      ))}
     </Group>
   );
 };
