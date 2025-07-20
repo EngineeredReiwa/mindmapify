@@ -20,17 +20,37 @@ export class MermaidGenerator {
    * Generate complete Mermaid flowchart code with logical relationships
    */
   generateFlowchartCode(): string {
+    const header = `%% 本図は「事象間の論理関係」を示すための**簡易ラベル集**です。
+%% 矢印は「因果・階層・並列」の三軸に整理し、流れは矢印の向きで示します。具体的な関係は直感的に読める8ラベルのみを採用しています。
+%% 1. 因果（前->後）
+%% - 原因 : ある事象を引き起こすトリガーを示す
+%% - 結果 : 原因や手段から生じるアウトカムを示す
+%%
+%% 2. 目的-手段ブリッジ
+%% - 手段 : 目標や結果を達成するための具体的アプローチを示す
+%%
+%% 3. 階層（抽象<->具体）
+%% - 具体例 : 抽象概念に対する具体的なサンプルを示す
+%% - 要素 : 上位概念を分解して下位項目を示す
+%%
+%% 4. 並列（横の関係）
+%% - 同類 : 同一カテゴリー・同格の要素同士をつなぐ
+%% - 対比 : 性質が対照的／競合的な要素を比較する
+%% - 補完 : 片方でも機能するが、相乗効果がある要素を示す
+%%
+`;
+
     if (this.nodes.length === 0) {
-      return 'flowchart TD\n    start([Click New Node to add your first idea!])';
+      return header + 'flowchart TD\n    start([Click Add Node to add your first idea!])';
     }
 
     if (this.nodes.length === 1) {
       const node = this.nodes[0];
       const nodeId = this.getNodeId(node.id);
-      return `flowchart TD\n    ${nodeId}[${this.cleanText(node.text)}]`;
+      return header + `flowchart TD\n    ${nodeId}[${this.cleanText(node.text)}]`;
     }
 
-    let code = 'flowchart TD\n';
+    let code = header + 'flowchart TD\n';
     
     // Add all nodes
     this.nodes.forEach(node => {
@@ -62,7 +82,7 @@ export class MermaidGenerator {
    */
   generateMindmapCode(): string {
     if (this.nodes.length === 0) {
-      return 'mindmap\n  root\n    Click "New Node" to add your first idea!';
+      return 'mindmap\n  root\n    Click "Add Node" to add your first idea!';
     }
 
     if (this.nodes.length === 1) {
@@ -209,7 +229,7 @@ export class MermaidGenerator {
    */
   generateSimpleCode(): string {
     if (this.nodes.length === 0) {
-      return 'mindmap\n  root\n    Click "New Node" to add your first idea!';
+      return 'mindmap\n  root\n    Click "Add Node" to add your first idea!';
     }
 
     let code = 'mindmap\n  root\n';

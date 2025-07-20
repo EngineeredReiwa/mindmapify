@@ -48,6 +48,7 @@ export interface Connection {
   label?: string; // Relationship label
   style?: ConnectionStyle;
   isSelected?: boolean;
+  isEditingLabel?: boolean; // Label editing state
 }
 
 export interface CanvasState {
@@ -58,6 +59,9 @@ export interface CanvasState {
   connectionStartPoint?: string; // Connection point ID
   connectionStartPosition?: Position; // Absolute position for dashed arrow
   connectionEndPosition?: Position; // Mouse position for dashed arrow
+  isEditingConnection?: boolean; // Whether editing connection endpoints
+  editingConnectionId?: string; // ID of connection being edited
+  editingEndpoint?: 'start' | 'end'; // Which endpoint is being modified
 }
 
 export interface MindmapState {
@@ -87,6 +91,7 @@ export interface NodeActions {
   startEditing: (id: string) => void;
   stopEditing: (id: string) => void;
   stopAllEditing: () => void;
+  saveAndStopAllEditing: () => void;
 }
 
 export interface ConnectionActions {
@@ -94,11 +99,19 @@ export interface ConnectionActions {
   updateConnection: (id: string, updates: Partial<Connection>) => void;
   deleteConnection: (id: string) => void;
   selectConnection: (id: string | undefined) => void;
+  startEditingConnectionLabel: (id: string) => void;
+  stopEditingConnectionLabel: (id: string) => void;
+  startEditingConnectionEndpoint: (connectionId: string, endpoint: 'start' | 'end') => void;
+  updateConnectionEndpoint: (connectionId: string, newNodeId: string) => void;
+  cancelConnectionEndpointEdit: () => void;
 }
 
 export interface CanvasActions {
   setCanvasOffset: (offset: Position) => void;
   setCanvasZoom: (zoom: number) => void;
+  zoomIn: () => void;
+  zoomOut: () => void;
+  resetZoom: () => void;
   setCanvasDragging: (isDragging: boolean) => void;
   startConnection: (connectionPointId: string, startPosition: Position) => void;
   updateConnectionPreview: (endPosition: Position) => void;
@@ -115,9 +128,8 @@ export type MindmapActions = NodeActions & ConnectionActions & CanvasActions & H
 
 // Relationship labels for logical connections
 export const RELATION_LABELS = [
-  '具体例', '根拠', '結果', '同類',
-  '詳細', '原因', '手段', '対比',
-  '解決策', '前提', '要素', '補完'
+  '原因', '結果', '手段', '具体例',
+  '要素', '同類', '対比', '補完'
 ] as const;
 
 export type RelationLabel = typeof RELATION_LABELS[number];

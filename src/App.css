@@ -145,7 +145,37 @@
   background: white;
   cursor: pointer;
   font-size: 0.85rem;
-  transition: background-color 0.2s;
+  transition: all 0.2s;
+}
+
+.copy-btn.success {
+  background: #28a745;
+  color: white;
+  border-color: #28a745;
+}
+
+.copy-btn:disabled {
+  background: #f8f9fa;
+  color: #6c757d;
+  border-color: #dee2e6;
+  cursor: not-allowed;
+}
+
+.copy-success-message {
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  background: #d4edda;
+  border: 1px solid #c3e6cb;
+  border-radius: 4px;
+  color: #155724;
+  font-size: 0.85rem;
+  text-align: center;
+  animation: fadeInOut 2s ease-in-out;
+}
+
+@keyframes fadeInOut {
+  0%, 100% { opacity: 0; transform: translateY(-10px); }
+  10%, 90% { opacity: 1; transform: translateY(0); }
 }
 
 .panel-actions button:hover {

@@ -1,7 +1,10 @@
 import puppeteer from 'puppeteer';
 
 async function simpleTest() {
-  const browser = await puppeteer.launch({ headless: false });
+  const browser = await puppeteer.launch({
+    headless: "new",
+    defaultViewport: { width: 1280, height: 720 }
+  });
   const page = await browser.newPage();
   
   try {

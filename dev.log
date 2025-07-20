@@ -1,0 +1,525 @@
+
+> mindmapify@0.0.0 dev
+> vite
+
+PORT from env: undefined
+
+  VITE v7.0.5  ready in 84 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: use --host to expose
+7:04:06 AM [vite] (client) page reload temp/test-label-edit.js
+7:04:26 AM [vite] (client) hmr update /src/components/Canvas/Canvas.tsx, /src/index.css
+7:04:39 AM [vite] (client) hmr update /src/components/Canvas/Canvas.tsx, /src/index.css
+7:04:50 AM [vite] (client) hmr update /src/components/Connection/ConnectionLine.tsx, /src/index.css
+7:05:03 AM [vite] (client) hmr update /src/components/Connection/ConnectionLine.tsx, /src/index.css
+7:05:03 AM [vite] (client) hmr update /src/components/Connection/ConnectionLine.tsx, /src/index.css
+7:05:55 AM [vite] (client) hmr update /src/index.css, /src/components/Connection/ConnectionLabelEditor.tsx
+7:06:11 AM [vite] (client) hmr update /src/index.css, /src/components/Connection/ConnectionLabelEditor.tsx
+7:06:34 AM [vite] (client) hmr update /src/App.tsx, /src/index.css, /src/components/Canvas/Canvas.tsx, /src/components/Toolbar/Toolbar.tsx, /src/components/Connection/ConnectionLine.tsx, /src/components/Node/NodeComponent.tsx
+7:06:47 AM [vite] (client) hmr update /src/components/Connection/ConnectionLine.tsx, /src/index.css
+7:06:58 AM [vite] (client) hmr update /src/components/Connection/ConnectionLine.tsx, /src/index.css
+7:07:14 AM [vite] (client) hmr update /src/components/Canvas/Canvas.tsx, /src/index.css
+7:07:24 AM [vite] (client) hmr update /src/components/Canvas/Canvas.tsx, /src/index.css
+7:08:13 AM [vite] (client) page reload temp/test-label-edit.js
+7:09:04 AM [vite] (client) page reload temp/test-label-edit.js
+7:09:41 AM [vite] (client) hmr update /src/components/Canvas/Canvas.tsx, /src/index.css
+7:10:32 AM [vite] (client) page reload temp/test-label-edit.js
+7:10:43 AM [vite] (client) page reload temp/test-label-edit.js
+7:10:43 AM [vite] (client) page reload temp/test-label-edit.js
+7:11:56 AM [vite] (client) page reload docs/IMPLEMENTATION_ROADMAP.md
+7:12:55 AM [vite] (client) hmr update /src/App.tsx, /src/index.css
+7:19:07 AM [vite] (client) hmr update /src/App.tsx, /src/index.css
+7:30:06 AM [vite] (client) page reload docs/IMPLEMENTATION_ROADMAP.md
+7:30:13 AM [vite] (client) page reload docs/IMPLEMENTATION_ROADMAP.md
+7:32:30 AM [vite] (client) hmr update /src/index.css, /src/components/Connection/ConnectionLabelEditor.tsx
+7:33:35 AM [vite] (client) hmr update /src/components/Connection/ConnectionLabelEditor.tsx, /src/index.css
+7:33:43 AM [vite] (client) hmr update /src/components/Connection/ConnectionLabelEditor.tsx, /src/index.css
+7:34:03 AM [vite] (client) hmr update /src/components/Connection/ConnectionLabelEditor.tsx, /src/index.css
+7:34:36 AM [vite] (client) page reload temp/test-label-edit.js
+7:36:33 AM [vite] (client) hmr update /src/components/Connection/ConnectionLine.tsx, /src/index.css
+7:38:05 AM [vite] (client) page reload docs/IMPLEMENTATION_ROADMAP.md
+7:44:39 AM [vite] (client) hmr update /src/components/Canvas/Canvas.tsx, /src/index.css
+7:44:45 AM [vite] (client) hmr update /src/components/Canvas/Canvas.tsx, /src/index.css
+7:44:55 AM [vite] (client) hmr update /src/components/Canvas/Canvas.tsx, /src/index.css
+7:45:02 AM [vite] (client) hmr update /src/components/Connection/ConnectionLine.tsx, /src/index.css
+7:45:08 AM [vite] (client) hmr update /src/components/Connection/ConnectionLine.tsx, /src/index.css
+7:45:12 AM [vite] (client) hmr update /src/components/Connection/ConnectionLine.tsx, /src/index.css
+7:45:17 AM [vite] (client) hmr update /src/components/Connection/ConnectionLine.tsx, /src/index.css
+7:45:23 AM [vite] (client) hmr update /src/components/Connection/ConnectionLine.tsx, /src/index.css
+7:45:41 AM [vite] (client) hmr update /src/components/Connection/ConnectionLine.tsx, /src/index.css
+7:46:01 AM [vite] (client) page reload temp/test-label-final.js
+7:46:42 AM [vite] (client) page reload temp/test-editor-zindex.js
+7:56:45 AM [vite] (client) page reload docs/IMPLEMENTATION_ROADMAP.md
+7:58:40 AM [vite] (client) hmr update /src/components/Connection/ConnectionLine.tsx, /src/index.css
+8:02:07 AM [vite] (client) hmr update /src/components/Connection/ConnectionLine.tsx, /src/index.css
+8:04:44 AM [vite] (client) hmr update /src/components/Connection/ConnectionLine.tsx, /src/index.css
+8:05:23 AM [vite] (client) hmr update /src/components/Connection/ConnectionLine.tsx, /src/index.css
+8:06:50 AM [vite] (client) page reload docs/IMPLEMENTATION_ROADMAP.md
+8:07:04 AM [vite] (client) page reload docs/IMPLEMENTATION_ROADMAP.md
+8:10:08 AM [vite] (client) hmr update /src/App.tsx, /src/index.css
+8:10:17 AM [vite] (client) hmr update /src/App.tsx, /src/index.css
+8:10:25 AM [vite] (client) hmr update /src/App.tsx, /src/index.css
+8:10:42 AM [vite] (client) hmr update /src/App.css, /src/index.css
+8:11:17 AM [vite] (client) page reload temp/test-copy-button.js
+8:14:06 AM [vite] (client) page reload docs/IMPLEMENTATION_ROADMAP.md
+8:14:21 AM [vite] (client) page reload docs/IMPLEMENTATION_ROADMAP.md
+8:15:38 AM [vite] (client) hmr update /src/components/Node/NodeComponent.tsx, /src/index.css
+8:15:46 AM [vite] (client) hmr update /src/components/Canvas/Canvas.tsx, /src/index.css
+8:22:18 AM [vite] (client) hmr update /src/components/Node/NodeComponent.tsx, /src/index.css
+8:22:54 AM [vite] (client) page reload temp/test-paste-function.js
+8:22:54 AM [vite] (client) page reload temp/test-paste-function.js
+8:22:59 AM [vite] (client) page reload temp/test-paste-function.js
+8:23:26 AM [vite] (client) hmr update /src/components/Node/NodeComponent.tsx, /src/index.css
+8:24:14 AM [vite] (client) hmr update /src/components/Node/NodeComponent.tsx, /src/index.css
+8:37:35 AM [vite] (client) page reload docs/IMPLEMENTATION_ROADMAP.md
+8:37:46 AM [vite] (client) page reload docs/IMPLEMENTATION_ROADMAP.md
+8:37:55 AM [vite] (client) page reload docs/IMPLEMENTATION_ROADMAP.md
+8:41:37 AM [vite] (client) page reload .claude/settings.local.json
+8:41:52 AM [vite] (client) hmr update /src/App.tsx, /src/index.css, /src/components/Canvas/Canvas.tsx, /src/components/Toolbar/Toolbar.tsx, /src/components/Connection/ConnectionLine.tsx, /src/components/Node/NodeComponent.tsx
+8:41:56 AM [vite] (client) page reload .claude/settings.json
+8:41:58 AM [vite] (client) page reload .claude/settings.json
+8:42:02 AM [vite] (client) page reload .claude/settings.local.json
+8:42:03 AM [vite] (client) page reload .claude/settings.json
+8:42:07 AM [vite] (client) hmr update /src/index.css, /src/components/Connection/ConnectionLabelEditor.tsx
+8:42:38 AM [vite] (client) hmr update /src/components/Node/NodeComponent.tsx, /src/index.css
+8:42:46 AM [vite] (client) hmr update /src/components/Canvas/Canvas.tsx, /src/index.css
+8:42:54 AM [vite] (client) hmr update /src/components/Canvas/Canvas.tsx, /src/index.css
+8:43:37 AM [vite] (client) hmr update /src/components/Node/NodeComponent.tsx, /src/index.css
+8:46:40 AM [vite] (client) hmr update /src/components/Node/NodeComponent.tsx, /src/index.css
+8:47:12 AM [vite] (client) hmr update /src/components/Node/NodeComponent.tsx, /src/index.css
+8:47:41 AM [vite] (client) page reload temp/test-auto-save.js
+8:47:49 AM [vite] (client) hmr update /src/components/Node/NodeComponent.tsx, /src/index.css
+8:47:58 AM [vite] (client) hmr update /src/components/Node/NodeComponent.tsx, /src/index.css
+8:48:05 AM [vite] (client) hmr update /src/components/Node/NodeComponent.tsx, /src/index.css
+8:48:12 AM [vite] (client) hmr update /src/components/Node/NodeComponent.tsx, /src/index.css
+8:48:17 AM [vite] (client) hmr update /src/components/Node/NodeComponent.tsx, /src/index.css
+8:48:29 AM [vite] (client) hmr update /src/components/Node/NodeComponent.tsx, /src/index.css
+8:48:39 AM [vite] (client) hmr update /src/components/Node/NodeComponent.tsx, /src/index.css
+8:49:23 AM [vite] (client) page reload temp/test-ctrl-a-functionality.js
+8:53:44 AM [vite] (client) page reload docs/IMPLEMENTATION_ROADMAP.md
+8:53:58 AM [vite] (client) page reload docs/IMPLEMENTATION_ROADMAP.md
+8:55:50 AM [vite] (client) hmr update /src/components/Canvas/Canvas.tsx, /src/index.css
+8:56:01 AM [vite] (client) hmr update /src/components/Node/NodeComponent.tsx, /src/index.css
+8:56:01 AM [vite] (client) hmr update /src/components/Node/NodeComponent.tsx, /src/index.css
+8:56:54 AM [vite] (client) page reload temp/test-node-connection-interference.js
+8:57:38 AM [vite] (client) page reload docs/IMPLEMENTATION_ROADMAP.md
+9:00:18 AM [vite] (client) hmr update /src/index.css, /src/components/Connection/ConnectionLabelEditor.tsx
+9:00:27 AM [vite] (client) hmr update /src/index.css, /src/components/Connection/ConnectionLabelEditor.tsx
+9:00:43 AM [vite] (client) hmr update /src/App.tsx, /src/index.css, /src/components/Canvas/Canvas.tsx, /src/components/Toolbar/Toolbar.tsx, /src/components/Connection/ConnectionLine.tsx, /src/components/Node/NodeComponent.tsx
+9:01:07 AM [vite] (client) hmr update /src/components/Connection/ConnectionLine.tsx, /src/index.css
+9:01:31 AM [vite] (client) hmr update /src/components/Connection/ConnectionLine.tsx, /src/index.css
+9:01:49 AM [vite] (client) hmr update /src/components/Connection/ConnectionLine.tsx, /src/index.css
+9:02:07 AM [vite] (client) hmr update /src/components/Node/NodeComponent.tsx, /src/index.css
+9:02:15 AM [vite] (client) hmr update /src/components/Node/NodeComponent.tsx, /src/index.css
+9:02:28 AM [vite] (client) hmr update /src/components/Canvas/Canvas.tsx, /src/index.css
+9:02:40 AM [vite] (client) hmr update /src/components/Canvas/Canvas.tsx, /src/index.css
+9:05:03 AM [vite] (client) page reload docs/IMPLEMENTATION_ROADMAP.md
+9:09:46 AM [vite] (client) page reload temp/debug-connection-selection.js
+9:14:52 AM [vite] (client) hmr update /src/components/Node/NodeComponent.tsx, /src/index.css
+9:15:08 AM [vite] (client) hmr update /src/components/Node/NodeComponent.tsx, /src/index.css
+9:15:22 AM [vite] (client) hmr update /src/components/Connection/ConnectionLine.tsx, /src/index.css
+9:21:25 AM [vite] (client) hmr update /src/components/Node/NodeComponent.tsx, /src/index.css
+9:22:00 AM [vite] (client) page reload temp/test-handle-visibility-fix.js
+9:26:40 AM [vite] (client) page reload temp/test-handle-interaction.js
+9:27:05 AM [vite] (client) page reload temp/test-handle-interaction.js
+9:27:58 AM [vite] (client) hmr update /src/components/Connection/ConnectionLine.tsx, /src/index.css
+9:28:14 AM [vite] (client) hmr update /src/components/Connection/ConnectionLine.tsx, /src/index.css
+9:28:36 AM [vite] (client) page reload temp/test-handle-interaction.js
+9:28:39 AM [vite] (client) page reload temp/test-handle-interaction.js
+9:29:33 AM [vite] (client) hmr update /src/components/Canvas/Canvas.tsx, /src/index.css
+9:29:44 AM [vite] (client) hmr update /src/components/Canvas/Canvas.tsx, /src/index.css
+9:29:57 AM [vite] (client) hmr update /src/components/Canvas/Canvas.tsx, /src/index.css
+9:30:10 AM [vite] (client) hmr update /src/components/Connection/ConnectionLine.tsx, /src/index.css
+9:30:10 AM [vite] (client) hmr update /src/components/Connection/ConnectionLine.tsx, /src/index.css
+9:31:57 AM [vite] (client) hmr update /src/components/Canvas/Canvas.tsx, /src/index.css
+9:33:20 AM [vite] (client) hmr update /src/components/Canvas/Canvas.tsx, /src/index.css
+9:33:33 AM [vite] (client) hmr update /src/components/Canvas/Canvas.tsx, /src/index.css
+9:33:33 AM [vite] (client) hmr update /src/components/Canvas/Canvas.tsx, /src/index.css
+9:34:07 AM [vite] (client) hmr update /src/components/Canvas/Canvas.tsx, /src/index.css
+9:34:39 AM [vite] (client) hmr update /src/components/Canvas/Canvas.tsx, /src/index.css
+9:35:21 AM [vite] (client) hmr update /src/components/Connection/ConnectionLine.tsx, /src/index.css
+9:35:47 AM [vite] (client) hmr update /src/components/Canvas/Canvas.tsx, /src/index.css
+9:41:08 AM [vite] (client) hmr update /src/components/Connection/ConnectionLine.tsx, /src/index.css
+9:41:25 AM [vite] (client) page reload temp/debug-connection-state.js
+9:42:52 AM [vite] (client) hmr update /src/components/Canvas/Canvas.tsx, /src/index.css
+9:42:59 AM [vite] (client) Pre-transform error: /Users/kay/Project/mindmapify/src/components/Canvas/Canvas.tsx: Identifier 'stage' has already been declared. (139:10)
+
+  137 |     
+  138 |     // Get click coordinates
+> 139 |     const stage = e.target.getStage();
+      |           ^
+  140 |     const pointer = stage.getPointerPosition();
+  141 |     
+  142 |     if (pointer) {
+  Plugin: vite:react-babel
+  File: /Users/kay/Project/mindmapify/src/components/Canvas/Canvas.tsx:139:10
+  137|      
+  138|      // Get click coordinates
+  139|      const stage = e.target.getStage();
+     |            ^
+  140|      const pointer = stage.getPointerPosition();
+  141|      
+9:42:59 AM [vite] Internal server error: /Users/kay/Project/mindmapify/src/components/Canvas/Canvas.tsx: Identifier 'stage' has already been declared. (139:10)
+
+  137 |     
+  138 |     // Get click coordinates
+> 139 |     const stage = e.target.getStage();
+      |           ^
+  140 |     const pointer = stage.getPointerPosition();
+  141 |     
+  142 |     if (pointer) {
+  Plugin: vite:react-babel
+  File: /Users/kay/Project/mindmapify/src/components/Canvas/Canvas.tsx:139:10
+  137|      
+  138|      // Get click coordinates
+  139|      const stage = e.target.getStage();
+     |            ^
+  140|      const pointer = stage.getPointerPosition();
+  141|      
+      at constructor (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:367:19)
+      at TypeScriptParserMixin.raise (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:6627:19)
+      at TypeScriptScopeHandler.checkRedeclarationInScope (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:1644:19)
+      at TypeScriptScopeHandler.declareName (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:1610:12)
+      at TypeScriptScopeHandler.declareName (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:4910:11)
+      at TypeScriptParserMixin.declareNameFromIdentifier (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:7591:16)
+      at TypeScriptParserMixin.checkIdentifier (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:7587:12)
+      at TypeScriptParserMixin.checkLVal (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:7526:12)
+      at TypeScriptParserMixin.parseVarId (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:13412:10)
+      at TypeScriptParserMixin.parseVarId (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:9767:11)
+      at TypeScriptParserMixin.parseVar (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:13383:12)
+      at TypeScriptParserMixin.parseVarStatement (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:13230:10)
+      at TypeScriptParserMixin.parseVarStatement (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:9493:31)
+      at TypeScriptParserMixin.parseStatementContent (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:12851:23)
+      at TypeScriptParserMixin.parseStatementContent (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:9527:18)
+      at TypeScriptParserMixin.parseStatementLike (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:12767:17)
+      at TypeScriptParserMixin.parseStatementListItem (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:12747:17)
+      at TypeScriptParserMixin.parseBlockOrModuleBlockBody (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:13316:61)
+      at TypeScriptParserMixin.parseBlockBody (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:13309:10)
+      at TypeScriptParserMixin.parseBlock (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:13297:10)
+      at TypeScriptParserMixin.parseFunctionBody (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:12101:24)
+      at TypeScriptParserMixin.parseArrowExpression (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:12076:10)
+      at TypeScriptParserMixin.parseParenAndDistinguishExpression (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:11686:12)
+      at TypeScriptParserMixin.parseExprAtom (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:11326:23)
+      at TypeScriptParserMixin.parseExprAtom (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:4794:20)
+      at TypeScriptParserMixin.parseExprSubscripts (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:11076:23)
+      at TypeScriptParserMixin.parseUpdate (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:11061:21)
+      at TypeScriptParserMixin.parseMaybeUnary (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:11041:23)
+      at TypeScriptParserMixin.parseMaybeUnary (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:9852:18)
+      at TypeScriptParserMixin.parseMaybeUnaryOrPrivate (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:10894:61)
+      at TypeScriptParserMixin.parseExprOps (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:10899:23)
+      at TypeScriptParserMixin.parseMaybeConditional (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:10876:23)
+      at TypeScriptParserMixin.parseMaybeAssign (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:10826:21)
+      at TypeScriptParserMixin.parseMaybeAssign (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:9801:20)
+      at /Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:10795:39
+      at TypeScriptParserMixin.allowInAnd (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:12422:16)
+      at TypeScriptParserMixin.parseMaybeAssignAllowIn (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:10795:17)
+      at TypeScriptParserMixin.parseVar (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:13384:91)
+      at TypeScriptParserMixin.parseVarStatement (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:13230:10)
+      at TypeScriptParserMixin.parseVarStatement (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:9493:31)
+      at TypeScriptParserMixin.parseStatementContent (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:12851:23)
+      at TypeScriptParserMixin.parseStatementContent (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:9527:18)
+      at TypeScriptParserMixin.parseStatementLike (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:12767:17)
+      at TypeScriptParserMixin.parseStatementListItem (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:12747:17)
+      at TypeScriptParserMixin.parseBlockOrModuleBlockBody (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:13316:61)
+      at TypeScriptParserMixin.parseBlockBody (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:13309:10)
+      at TypeScriptParserMixin.parseBlock (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:13297:10)
+      at TypeScriptParserMixin.parseFunctionBody (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:12101:24)
+      at TypeScriptParserMixin.parseArrowExpression (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:12076:10)
+      at TypeScriptParserMixin.parseParenAndDistinguishExpression (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:11686:12)
+9:43:10 AM [vite] (client) page reload temp/test-simple-handle-click.js
+9:43:11 AM [vite] Internal server error: /Users/kay/Project/mindmapify/src/components/Canvas/Canvas.tsx: Identifier 'stage' has already been declared. (139:10)
+
+  137 |     
+  138 |     // Get click coordinates
+> 139 |     const stage = e.target.getStage();
+      |           ^
+  140 |     const pointer = stage.getPointerPosition();
+  141 |     
+  142 |     if (pointer) {
+  Plugin: vite:react-babel
+  File: /Users/kay/Project/mindmapify/src/components/Canvas/Canvas.tsx:139:10
+  137|      
+  138|      // Get click coordinates
+  139|      const stage = e.target.getStage();
+     |            ^
+  140|      const pointer = stage.getPointerPosition();
+  141|      
+      at constructor (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:367:19)
+      at TypeScriptParserMixin.raise (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:6627:19)
+      at TypeScriptScopeHandler.checkRedeclarationInScope (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:1644:19)
+      at TypeScriptScopeHandler.declareName (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:1610:12)
+      at TypeScriptScopeHandler.declareName (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:4910:11)
+      at TypeScriptParserMixin.declareNameFromIdentifier (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:7591:16)
+      at TypeScriptParserMixin.checkIdentifier (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:7587:12)
+      at TypeScriptParserMixin.checkLVal (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:7526:12)
+      at TypeScriptParserMixin.parseVarId (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:13412:10)
+      at TypeScriptParserMixin.parseVarId (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:9767:11)
+      at TypeScriptParserMixin.parseVar (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:13383:12)
+      at TypeScriptParserMixin.parseVarStatement (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:13230:10)
+      at TypeScriptParserMixin.parseVarStatement (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:9493:31)
+      at TypeScriptParserMixin.parseStatementContent (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:12851:23)
+      at TypeScriptParserMixin.parseStatementContent (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:9527:18)
+      at TypeScriptParserMixin.parseStatementLike (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:12767:17)
+      at TypeScriptParserMixin.parseStatementListItem (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:12747:17)
+      at TypeScriptParserMixin.parseBlockOrModuleBlockBody (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:13316:61)
+      at TypeScriptParserMixin.parseBlockBody (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:13309:10)
+      at TypeScriptParserMixin.parseBlock (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:13297:10)
+      at TypeScriptParserMixin.parseFunctionBody (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:12101:24)
+      at TypeScriptParserMixin.parseArrowExpression (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:12076:10)
+      at TypeScriptParserMixin.parseParenAndDistinguishExpression (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:11686:12)
+      at TypeScriptParserMixin.parseExprAtom (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:11326:23)
+      at TypeScriptParserMixin.parseExprAtom (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:4794:20)
+      at TypeScriptParserMixin.parseExprSubscripts (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:11076:23)
+      at TypeScriptParserMixin.parseUpdate (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:11061:21)
+      at TypeScriptParserMixin.parseMaybeUnary (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:11041:23)
+      at TypeScriptParserMixin.parseMaybeUnary (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:9852:18)
+      at TypeScriptParserMixin.parseMaybeUnaryOrPrivate (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:10894:61)
+      at TypeScriptParserMixin.parseExprOps (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:10899:23)
+      at TypeScriptParserMixin.parseMaybeConditional (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:10876:23)
+      at TypeScriptParserMixin.parseMaybeAssign (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:10826:21)
+      at TypeScriptParserMixin.parseMaybeAssign (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:9801:20)
+      at /Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:10795:39
+      at TypeScriptParserMixin.allowInAnd (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:12422:16)
+      at TypeScriptParserMixin.parseMaybeAssignAllowIn (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:10795:17)
+      at TypeScriptParserMixin.parseVar (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:13384:91)
+      at TypeScriptParserMixin.parseVarStatement (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:13230:10)
+      at TypeScriptParserMixin.parseVarStatement (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:9493:31)
+      at TypeScriptParserMixin.parseStatementContent (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:12851:23)
+      at TypeScriptParserMixin.parseStatementContent (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:9527:18)
+      at TypeScriptParserMixin.parseStatementLike (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:12767:17)
+      at TypeScriptParserMixin.parseStatementListItem (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:12747:17)
+      at TypeScriptParserMixin.parseBlockOrModuleBlockBody (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:13316:61)
+      at TypeScriptParserMixin.parseBlockBody (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:13309:10)
+      at TypeScriptParserMixin.parseBlock (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:13297:10)
+      at TypeScriptParserMixin.parseFunctionBody (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:12101:24)
+      at TypeScriptParserMixin.parseArrowExpression (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:12076:10)
+      at TypeScriptParserMixin.parseParenAndDistinguishExpression (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:11686:12)
+9:43:44 AM [vite] (client) hmr update /src/components/Canvas/Canvas.tsx, /src/index.css
+9:43:51 AM [vite] (client) Pre-transform error: /Users/kay/Project/mindmapify/src/components/Canvas/Canvas.tsx: Identifier 'pointer' has already been declared. (140:10)
+
+  138 |     // Get click coordinates
+  139 |     const stage = e.target.getStage();
+> 140 |     const pointer = stage.getPointerPosition();
+      |           ^
+  141 |     
+  142 |     if (pointer) {
+  143 |       // Convert screen coordinates to canvas coordinates
+  Plugin: vite:react-babel
+  File: /Users/kay/Project/mindmapify/src/components/Canvas/Canvas.tsx:140:10
+  138|      // Get click coordinates
+  139|      const stage = e.target.getStage();
+  140|      const pointer = stage.getPointerPosition();
+     |            ^
+  141|      
+  142|      if (pointer) {
+9:43:51 AM [vite] Internal server error: /Users/kay/Project/mindmapify/src/components/Canvas/Canvas.tsx: Identifier 'pointer' has already been declared. (140:10)
+
+  138 |     // Get click coordinates
+  139 |     const stage = e.target.getStage();
+> 140 |     const pointer = stage.getPointerPosition();
+      |           ^
+  141 |     
+  142 |     if (pointer) {
+  143 |       // Convert screen coordinates to canvas coordinates
+  Plugin: vite:react-babel
+  File: /Users/kay/Project/mindmapify/src/components/Canvas/Canvas.tsx:140:10
+  138|      // Get click coordinates
+  139|      const stage = e.target.getStage();
+  140|      const pointer = stage.getPointerPosition();
+     |            ^
+  141|      
+  142|      if (pointer) {
+      at constructor (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:367:19)
+      at TypeScriptParserMixin.raise (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:6627:19)
+      at TypeScriptScopeHandler.checkRedeclarationInScope (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:1644:19)
+      at TypeScriptScopeHandler.declareName (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:1610:12)
+      at TypeScriptScopeHandler.declareName (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:4910:11)
+      at TypeScriptParserMixin.declareNameFromIdentifier (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:7591:16)
+      at TypeScriptParserMixin.checkIdentifier (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:7587:12)
+      at TypeScriptParserMixin.checkLVal (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:7526:12)
+      at TypeScriptParserMixin.parseVarId (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:13412:10)
+      at TypeScriptParserMixin.parseVarId (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:9767:11)
+      at TypeScriptParserMixin.parseVar (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:13383:12)
+      at TypeScriptParserMixin.parseVarStatement (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:13230:10)
+      at TypeScriptParserMixin.parseVarStatement (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:9493:31)
+      at TypeScriptParserMixin.parseStatementContent (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:12851:23)
+      at TypeScriptParserMixin.parseStatementContent (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:9527:18)
+      at TypeScriptParserMixin.parseStatementLike (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:12767:17)
+      at TypeScriptParserMixin.parseStatementListItem (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:12747:17)
+      at TypeScriptParserMixin.parseBlockOrModuleBlockBody (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:13316:61)
+      at TypeScriptParserMixin.parseBlockBody (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:13309:10)
+      at TypeScriptParserMixin.parseBlock (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:13297:10)
+      at TypeScriptParserMixin.parseFunctionBody (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:12101:24)
+      at TypeScriptParserMixin.parseArrowExpression (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:12076:10)
+      at TypeScriptParserMixin.parseParenAndDistinguishExpression (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:11686:12)
+      at TypeScriptParserMixin.parseExprAtom (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:11326:23)
+      at TypeScriptParserMixin.parseExprAtom (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:4794:20)
+      at TypeScriptParserMixin.parseExprSubscripts (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:11076:23)
+      at TypeScriptParserMixin.parseUpdate (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:11061:21)
+      at TypeScriptParserMixin.parseMaybeUnary (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:11041:23)
+      at TypeScriptParserMixin.parseMaybeUnary (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:9852:18)
+      at TypeScriptParserMixin.parseMaybeUnaryOrPrivate (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:10894:61)
+      at TypeScriptParserMixin.parseExprOps (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:10899:23)
+      at TypeScriptParserMixin.parseMaybeConditional (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:10876:23)
+      at TypeScriptParserMixin.parseMaybeAssign (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:10826:21)
+      at TypeScriptParserMixin.parseMaybeAssign (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:9801:20)
+      at /Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:10795:39
+      at TypeScriptParserMixin.allowInAnd (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:12422:16)
+      at TypeScriptParserMixin.parseMaybeAssignAllowIn (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:10795:17)
+      at TypeScriptParserMixin.parseVar (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:13384:91)
+      at TypeScriptParserMixin.parseVarStatement (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:13230:10)
+      at TypeScriptParserMixin.parseVarStatement (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:9493:31)
+      at TypeScriptParserMixin.parseStatementContent (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:12851:23)
+      at TypeScriptParserMixin.parseStatementContent (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:9527:18)
+      at TypeScriptParserMixin.parseStatementLike (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:12767:17)
+      at TypeScriptParserMixin.parseStatementListItem (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:12747:17)
+      at TypeScriptParserMixin.parseBlockOrModuleBlockBody (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:13316:61)
+      at TypeScriptParserMixin.parseBlockBody (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:13309:10)
+      at TypeScriptParserMixin.parseBlock (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:13297:10)
+      at TypeScriptParserMixin.parseFunctionBody (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:12101:24)
+      at TypeScriptParserMixin.parseArrowExpression (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:12076:10)
+      at TypeScriptParserMixin.parseParenAndDistinguishExpression (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:11686:12)
+9:46:16 AM [vite] (client) hmr update /src/components/Canvas/Canvas.tsx, /src/index.css
+9:46:30 AM [vite] (client) hmr update /src/components/Connection/ConnectionLine.tsx, /src/index.css
+9:46:30 AM [vite] (client) hmr update /src/components/Connection/ConnectionLine.tsx, /src/index.css
+9:48:31 AM [vite] (client) hmr update /src/components/Canvas/Canvas.tsx, /src/index.css
+9:48:46 AM [vite] (client) hmr update /src/components/Connection/ConnectionLine.tsx, /src/index.css
+9:49:35 AM [vite] (client) hmr update /src/components/Canvas/Canvas.tsx, /src/index.css
+9:49:40 AM [vite] (client) Pre-transform error: /Users/kay/Project/mindmapify/src/components/Canvas/Canvas.tsx: Identifier 'targetType' has already been declared. (59:10)
+
+  57 |     // Skip connection hit testing if click originated from a node
+  58 |     // Nodes handle their own click events and shouldn't trigger connection editing
+> 59 |     const targetType = e.target.getType?.();
+     |           ^
+  60 |     const isNodeClick = targetType === 'Rect' || targetType === 'Text' || targetType === 'Group';
+  61 |     
+  62 |     if (isNodeClick) {
+  Plugin: vite:react-babel
+  File: /Users/kay/Project/mindmapify/src/components/Canvas/Canvas.tsx:59:10
+  57 |      // Skip connection hit testing if click originated from a node
+  58 |      // Nodes handle their own click events and shouldn't trigger connection editing
+  59 |      const targetType = e.target.getType?.();
+     |            ^
+  60 |      const isNodeClick = targetType === 'Rect' || targetType === 'Text' || targetType === 'Group';
+  61 |      
+9:49:40 AM [vite] Internal server error: /Users/kay/Project/mindmapify/src/components/Canvas/Canvas.tsx: Identifier 'targetType' has already been declared. (59:10)
+
+  57 |     // Skip connection hit testing if click originated from a node
+  58 |     // Nodes handle their own click events and shouldn't trigger connection editing
+> 59 |     const targetType = e.target.getType?.();
+     |           ^
+  60 |     const isNodeClick = targetType === 'Rect' || targetType === 'Text' || targetType === 'Group';
+  61 |     
+  62 |     if (isNodeClick) {
+  Plugin: vite:react-babel
+  File: /Users/kay/Project/mindmapify/src/components/Canvas/Canvas.tsx:59:10
+  57 |      // Skip connection hit testing if click originated from a node
+  58 |      // Nodes handle their own click events and shouldn't trigger connection editing
+  59 |      const targetType = e.target.getType?.();
+     |            ^
+  60 |      const isNodeClick = targetType === 'Rect' || targetType === 'Text' || targetType === 'Group';
+  61 |      
+      at constructor (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:367:19)
+      at TypeScriptParserMixin.raise (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:6627:19)
+      at TypeScriptScopeHandler.checkRedeclarationInScope (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:1644:19)
+      at TypeScriptScopeHandler.declareName (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:1610:12)
+      at TypeScriptScopeHandler.declareName (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:4910:11)
+      at TypeScriptParserMixin.declareNameFromIdentifier (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:7591:16)
+      at TypeScriptParserMixin.checkIdentifier (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:7587:12)
+      at TypeScriptParserMixin.checkLVal (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:7526:12)
+      at TypeScriptParserMixin.parseVarId (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:13412:10)
+      at TypeScriptParserMixin.parseVarId (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:9767:11)
+      at TypeScriptParserMixin.parseVar (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:13383:12)
+      at TypeScriptParserMixin.parseVarStatement (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:13230:10)
+      at TypeScriptParserMixin.parseVarStatement (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:9493:31)
+      at TypeScriptParserMixin.parseStatementContent (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:12851:23)
+      at TypeScriptParserMixin.parseStatementContent (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:9527:18)
+      at TypeScriptParserMixin.parseStatementLike (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:12767:17)
+      at TypeScriptParserMixin.parseStatementListItem (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:12747:17)
+      at TypeScriptParserMixin.parseBlockOrModuleBlockBody (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:13316:61)
+      at TypeScriptParserMixin.parseBlockBody (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:13309:10)
+      at TypeScriptParserMixin.parseBlock (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:13297:10)
+      at TypeScriptParserMixin.parseFunctionBody (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:12101:24)
+      at TypeScriptParserMixin.parseArrowExpression (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:12076:10)
+      at TypeScriptParserMixin.parseParenAndDistinguishExpression (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:11686:12)
+      at TypeScriptParserMixin.parseExprAtom (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:11326:23)
+      at TypeScriptParserMixin.parseExprAtom (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:4794:20)
+      at TypeScriptParserMixin.parseExprSubscripts (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:11076:23)
+      at TypeScriptParserMixin.parseUpdate (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:11061:21)
+      at TypeScriptParserMixin.parseMaybeUnary (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:11041:23)
+      at TypeScriptParserMixin.parseMaybeUnary (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:9852:18)
+      at TypeScriptParserMixin.parseMaybeUnaryOrPrivate (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:10894:61)
+      at TypeScriptParserMixin.parseExprOps (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:10899:23)
+      at TypeScriptParserMixin.parseMaybeConditional (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:10876:23)
+      at TypeScriptParserMixin.parseMaybeAssign (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:10826:21)
+      at TypeScriptParserMixin.parseMaybeAssign (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:9801:20)
+      at /Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:10795:39
+      at TypeScriptParserMixin.allowInAnd (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:12422:16)
+      at TypeScriptParserMixin.parseMaybeAssignAllowIn (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:10795:17)
+      at TypeScriptParserMixin.parseVar (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:13384:91)
+      at TypeScriptParserMixin.parseVarStatement (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:13230:10)
+      at TypeScriptParserMixin.parseVarStatement (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:9493:31)
+      at TypeScriptParserMixin.parseStatementContent (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:12851:23)
+      at TypeScriptParserMixin.parseStatementContent (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:9527:18)
+      at TypeScriptParserMixin.parseStatementLike (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:12767:17)
+      at TypeScriptParserMixin.parseStatementListItem (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:12747:17)
+      at TypeScriptParserMixin.parseBlockOrModuleBlockBody (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:13316:61)
+      at TypeScriptParserMixin.parseBlockBody (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:13309:10)
+      at TypeScriptParserMixin.parseBlock (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:13297:10)
+      at TypeScriptParserMixin.parseFunctionBody (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:12101:24)
+      at TypeScriptParserMixin.parseArrowExpression (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:12076:10)
+      at TypeScriptParserMixin.parseParenAndDistinguishExpression (/Users/kay/Project/mindmapify/node_modules/@babel/parser/lib/index.js:11686:12)
+9:50:18 AM [vite] (client) hmr update /src/components/Canvas/Canvas.tsx, /src/index.css
+9:50:53 AM [vite] (client) hmr update /src/components/Connection/ConnectionLine.tsx, /src/index.css
+9:51:02 AM [vite] (client) hmr update /src/components/Connection/ConnectionLine.tsx, /src/index.css
+9:51:38 AM [vite] (client) hmr update /src/components/Canvas/Canvas.tsx, /src/index.css
+9:52:18 AM [vite] (client) hmr update /src/components/Canvas/Canvas.tsx, /src/index.css
+9:54:02 AM [vite] (client) hmr update /src/components/Canvas/Canvas.tsx, /src/index.css
+9:54:56 AM [vite] (client) hmr update /src/components/Canvas/Canvas.tsx, /src/index.css
+9:55:43 AM [vite] (client) page reload temp/test-complete-endpoint-editing.js
+9:55:43 AM [vite] (client) page reload temp/test-complete-endpoint-editing.js
+9:55:44 AM [vite] (client) page reload temp/test-complete-endpoint-editing.js
+9:56:12 AM [vite] (client) hmr update /src/components/Canvas/Canvas.tsx, /src/index.css
+9:56:17 AM [vite] (client) hmr update /src/components/Canvas/Canvas.tsx, /src/index.css
+9:56:25 AM [vite] (client) hmr update /src/components/Canvas/Canvas.tsx, /src/index.css
+9:56:52 AM [vite] (client) hmr update /src/components/Canvas/Canvas.tsx, /src/index.css
+9:57:20 AM [vite] (client) hmr update /src/components/Canvas/Canvas.tsx, /src/index.css
+9:57:52 AM [vite] (client) hmr update /src/components/Canvas/Canvas.tsx, /src/index.css
+9:58:21 AM [vite] (client) hmr update /src/components/Canvas/Canvas.tsx, /src/index.css
+10:01:46 AM [vite] (client) hmr update /src/components/Node/NodeComponent.tsx, /src/index.css
+10:01:57 AM [vite] (client) hmr update /src/components/Node/NodeComponent.tsx, /src/index.css
+10:02:54 AM [vite] (client) hmr update /src/components/Canvas/Canvas.tsx, /src/index.css
+10:03:26 AM [vite] (client) hmr update /src/components/Canvas/Canvas.tsx, /src/index.css
+10:04:19 AM [vite] (client) hmr update /src/components/Canvas/Canvas.tsx, /src/index.css
+10:04:28 AM [vite] (client) hmr update /src/components/Canvas/Canvas.tsx, /src/index.css
+10:05:17 AM [vite] (client) hmr update /src/components/Canvas/Canvas.tsx, /src/index.css
+10:05:44 AM [vite] (client) hmr update /src/components/Canvas/Canvas.tsx, /src/index.css
+10:06:13 AM [vite] (client) page reload temp/test-complete-endpoint-editing.js
+10:07:00 AM [vite] (client) page reload .claude/settings.local.json
+10:07:19 AM [vite] (client) hmr update /src/App.tsx, /src/index.css, /src/components/Canvas/Canvas.tsx, /src/components/Toolbar/Toolbar.tsx, /src/components/Connection/ConnectionLine.tsx, /src/components/Node/NodeComponent.tsx
+10:07:25 AM [vite] (client) page reload .claude/settings.json
+10:07:30 AM [vite] (client) page reload .claude/settings.local.json
+10:08:22 AM [vite] (client) hmr update /src/components/Canvas/Canvas.tsx, /src/index.css
+10:08:23 AM [vite] (client) hmr update /src/components/Canvas/Canvas.tsx, /src/index.css
+10:08:36 AM [vite] (client) hmr update /src/App.tsx, /src/index.css, /src/components/Canvas/Canvas.tsx, /src/components/Toolbar/Toolbar.tsx, /src/components/Connection/ConnectionLine.tsx, /src/components/Node/NodeComponent.tsx
+10:09:08 AM [vite] (client) hmr update /src/components/Canvas/Canvas.tsx, /src/index.css
+12:23:29 PM [vite] (client) hmr update /src/components/Canvas/Canvas.tsx, /src/index.css
+12:23:37 PM [vite] (client) hmr update /src/App.tsx, /src/index.css, /src/components/Canvas/Canvas.tsx, /src/components/Toolbar/Toolbar.tsx, /src/components/Connection/ConnectionLine.tsx, /src/components/Node/NodeComponent.tsx
+12:23:54 PM [vite] (client) hmr update /src/components/Canvas/Canvas.tsx, /src/index.css
+12:23:59 PM [vite] (client) hmr update /src/components/Canvas/Canvas.tsx, /src/index.css
+12:23:59 PM [vite] (client) hmr update /src/components/Canvas/Canvas.tsx, /src/index.css
+12:24:09 PM [vite] (client) hmr update /src/components/Toolbar/Toolbar.tsx, /src/index.css
+12:24:16 PM [vite] (client) hmr update /src/components/Toolbar/Toolbar.tsx, /src/index.css
+12:24:16 PM [vite] (client) hmr update /src/components/Toolbar/Toolbar.tsx, /src/index.css
+12:24:27 PM [vite] (client) hmr update /src/index.css, /src/components/Connection/ConnectionLabelEditor.tsx
+1:34:36 PM [vite] (client) hmr update /src/components/Canvas/Canvas.tsx, /src/index.css
+1:35:22 PM [vite] (client) hmr update /src/components/Toolbar/Toolbar.tsx, /src/index.css
+1:35:25 PM [vite] (client) hmr update /src/components/Toolbar/Toolbar.tsx, /src/index.css
+1:35:25 PM [vite] (client) hmr update /src/components/Toolbar/Toolbar.tsx, /src/index.css
+1:35:45 PM [vite] (client) hmr update /src/App.tsx, /src/index.css
+1:35:48 PM [vite] (client) hmr update /src/App.tsx, /src/index.css
+1:35:49 PM [vite] (client) hmr update /src/components/Canvas/Canvas.tsx, /src/index.css
+1:36:02 PM [vite] (client) hmr update /src/components/Canvas/Canvas.tsx, /src/index.css
+1:36:19 PM [vite] (client) hmr update /src/App.tsx, /src/index.css
+1:36:34 PM [vite] (client) hmr update /src/App.tsx, /src/index.css

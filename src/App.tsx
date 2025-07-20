@@ -2,13 +2,19 @@ import { useState, useEffect, useMemo } from 'react';
 import './App.css';
 import { Canvas } from './components/Canvas/Canvas';
 import { Toolbar } from './components/Toolbar/Toolbar';
-import { useNodes, useConnections } from './stores/mindmapStore';
+import { useNodes, useConnections, useMindmapStore } from './stores/mindmapStore';
 import { MermaidGenerator } from './utils/mermaidGenerator';
 
 function App() {
   const [canvasSize, setCanvasSize] = useState({ width: 800, height: 600 });
+  const [copySuccess, setCopySuccess] = useState(false);
   const nodes = useNodes();
   const connections = useConnections();
+
+  // Expose store to window for debugging
+  useEffect(() => {
+    (window as any).mindmapStore = useMindmapStore;
+  }, []);
 
   // Handle window resize
   useEffect(() => {
@@ -41,6 +47,26 @@ function App() {
     return generator.generateFlowchartCode();
   }, [nodes, connections]);
 
+  // Handle copy to clipboard with feedback
+  const handleCopyCode = async () => {
+    try {
+      await navigator.clipboard.writeText(mermaidCode);
+      setCopySuccess(true);
+      setTimeout(() => setCopySuccess(false), 2000); // Hide success message after 2 seconds
+    } catch (err) {
+      console.error('Failed to copy code:', err);
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = mermaidCode;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      setCopySuccess(true);
+      setTimeout(() => setCopySuccess(false), 2000);
+    }
+  };
+
   return (
     <div className="app">
       <header className="header">
@@ -71,11 +97,20 @@ function App() {
               <code>{mermaidCode}</code>
             </pre>
             <div className="panel-actions">
-              <button onClick={() => navigator.clipboard.writeText(mermaidCode)}>
-                📋 Copy
+              <button 
+                onClick={handleCopyCode}
+                className={`copy-btn ${copySuccess ? 'success' : ''}`}
+                disabled={!mermaidCode.trim()}
+              >
+                {copySuccess ? '✅ Copied!' : '📋 Copy Code'}
               </button>
-              <button>👁 Preview</button>
+              <button>👁 Show Preview</button>
             </div>
+            {copySuccess && (
+              <div className="copy-success-message">
+                ✅ Mermaid code copied to clipboard!
+              </div>
+            )}
           </div>
         </aside>
       </main>

@@ -2,8 +2,8 @@ import puppeteer from 'puppeteer';
 
 async function testSimpleEdit() {
   const browser = await puppeteer.launch({ 
-    headless: false,  // Show browser to see what happens
-    slowMo: 500
+    headless: "new", // バックグラウンド実行（ブラウザ非表示）
+    defaultViewport: { width: 1280, height: 720 }
   });
   const page = await browser.newPage();
   

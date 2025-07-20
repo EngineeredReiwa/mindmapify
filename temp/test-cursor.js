@@ -5,9 +5,8 @@ async function testCursorAlignment() {
   console.log('Starting Puppeteer test...');
   
   const browser = await puppeteer.launch({ 
-    headless: false,
-    devtools: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox']
+    headless: "new",
+    defaultViewport: { width: 1280, height: 720 }
   });
   
   try {

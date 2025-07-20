@@ -146,6 +146,18 @@ export const useMindmapStore = create<MindmapState & MindmapActions>()(
       });
     },
 
+    // Auto-save and stop editing when clicking outside
+    saveAndStopAllEditing: () => {
+      set((state) => {
+        state.nodes.forEach(node => {
+          // Note: This function will be called from Canvas, 
+          // but the actual text content is managed in NodeComponent
+          // The NodeComponent will need to handle the save logic
+          node.isEditing = false;
+        });
+      });
+    },
+
     // Connection Actions
     addConnection: (fromId: string, toId: string) => {
       set((state) => {
@@ -231,6 +243,84 @@ export const useMindmapStore = create<MindmapState & MindmapActions>()(
       });
     },
 
+    startEditingConnectionLabel: (id: string) => {
+      set((state) => {
+        const connection = state.connections.find(c => c.id === id);
+        if (connection) {
+          connection.isEditingLabel = true;
+        }
+      });
+    },
+
+    stopEditingConnectionLabel: (id: string) => {
+      set((state) => {
+        const connection = state.connections.find(c => c.id === id);
+        if (connection) {
+          connection.isEditingLabel = false;
+        }
+      });
+    },
+
+    startEditingConnectionEndpoint: (connectionId: string, endpoint: 'start' | 'end') => {
+      set((state) => {
+        state.canvas.isEditingConnection = true;
+        state.canvas.editingConnectionId = connectionId;
+        state.canvas.editingEndpoint = endpoint;
+      });
+    },
+
+    updateConnectionEndpoint: (connectionId: string, newNodeId: string) => {
+      console.log('🔧 Store: updateConnectionEndpoint called', { connectionId, newNodeId });
+      set((state) => {
+        const connection = state.connections.find(c => c.id === connectionId);
+        const endpoint = state.canvas.editingEndpoint;
+        
+        console.log('🔧 Store: Found connection:', !!connection, 'endpoint:', endpoint);
+        
+        if (connection && endpoint) {
+          console.log('🔧 Store: Before update - connection.from:', connection.from, 'connection.to:', connection.to);
+          
+          // Save to history before making changes
+          state.history.past.push(state.history.present);
+          state.history.future = [];
+          
+          // Update the appropriate endpoint
+          if (endpoint === 'start') {
+            connection.from = newNodeId;
+            console.log('🔧 Store: Updated start endpoint to:', newNodeId);
+          } else {
+            connection.to = newNodeId;
+            console.log('🔧 Store: Updated end endpoint to:', newNodeId);
+          }
+          
+          console.log('🔧 Store: After update - connection.from:', connection.from, 'connection.to:', connection.to);
+          
+          // Update present state AFTER making changes
+          state.history.present = {
+            nodes: [...state.nodes],
+            connections: [...state.connections],
+          };
+          
+          // Clear editing state
+          state.canvas.isEditingConnection = false;
+          state.canvas.editingConnectionId = undefined;
+          state.canvas.editingEndpoint = undefined;
+          
+          console.log('🔧 Store: Editing state cleared');
+        } else {
+          console.log('🔧 Store: No connection or endpoint found - no update performed');
+        }
+      });
+    },
+
+    cancelConnectionEndpointEdit: () => {
+      set((state) => {
+        state.canvas.isEditingConnection = false;
+        state.canvas.editingConnectionId = undefined;
+        state.canvas.editingEndpoint = undefined;
+      });
+    },
+
     // Canvas Actions
     setCanvasOffset: (offset: Position) => {
       set((state) => {
@@ -241,6 +331,27 @@ export const useMindmapStore = create<MindmapState & MindmapActions>()(
     setCanvasZoom: (zoom: number) => {
       set((state) => {
         state.canvas.zoom = Math.max(0.1, Math.min(3, zoom));
+      });
+    },
+
+    zoomIn: () => {
+      set((state) => {
+        const scaleBy = 1.2;
+        state.canvas.zoom = Math.max(0.1, Math.min(3, state.canvas.zoom * scaleBy));
+      });
+    },
+
+    zoomOut: () => {
+      set((state) => {
+        const scaleBy = 1.2;
+        state.canvas.zoom = Math.max(0.1, Math.min(3, state.canvas.zoom / scaleBy));
+      });
+    },
+
+    resetZoom: () => {
+      set((state) => {
+        state.canvas.zoom = 1;
+        state.canvas.offset = { x: 0, y: 0 };
       });
     },
 
@@ -374,3 +485,8 @@ export const useNodes = () => useMindmapStore(state => state.nodes);
 export const useConnections = () => useMindmapStore(state => state.connections);
 export const useSelectedNodeId = () => useMindmapStore(state => state.selectedNodeId);
 export const useCanvasState = () => useMindmapStore(state => state.canvas);
+
+// Make store globally accessible for debugging
+if (typeof window !== 'undefined') {
+  (window as any).useMindmapStore = useMindmapStore;
+}

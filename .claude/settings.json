@@ -3,6 +3,8 @@
     "allow": [
       "Bash(find:*)",
       "Bash(ls:*)",
+      "Bash(grep:*)",
+      "Bash(rg:*)",
       "Bash(mkdir:*)",
       "Bash(npm run typecheck:*)",
       "Bash(npm run dev:*)",

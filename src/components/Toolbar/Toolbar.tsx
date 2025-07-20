@@ -4,7 +4,10 @@ import './Toolbar.css';
 
 export const Toolbar: React.FC = () => {
   const nodes = useNodes();
-  const { addNode, undo, redo, saveSnapshot } = useMindmapStore();
+  const connections = useMindmapStore(state => state.connections);
+  const { addNode, deleteNode, deleteConnection, undo, redo, saveSnapshot, zoomIn, zoomOut, resetZoom } = useMindmapStore();
+  const selectedNodeId = useMindmapStore(state => state.selectedNodeId);
+  const selectedConnection = connections.find(conn => conn.isSelected);
 
   const handleAddNode = () => {
     // Add node at center of canvas (layer coordinates, not stage coordinates)
@@ -13,7 +16,21 @@ export const Toolbar: React.FC = () => {
     addNode(centerPosition, 'New Node');
   };
 
-  const handleClear = () => {
+  const handleDeleteSelected = () => {
+    // Delete selected node only
+    if (selectedNodeId) {
+      deleteNode(selectedNodeId);
+    }
+  };
+
+  const handleDeleteConnection = () => {
+    // Delete selected connection only
+    if (selectedConnection) {
+      deleteConnection(selectedConnection.id);
+    }
+  };
+
+  const handleClearAll = () => {
     // Save current state before clearing
     saveSnapshot();
     // Clear all nodes (this will also clear connections via store logic)
@@ -34,7 +51,7 @@ export const Toolbar: React.FC = () => {
           onClick={handleAddNode}
           title="Add new node"
         >
-          ➕ New Node
+          ➕ Add Node
         </button>
       </div>
 
@@ -60,11 +77,51 @@ export const Toolbar: React.FC = () => {
       <div className="toolbar-group">
         <button 
           className="toolbar-btn danger"
-          onClick={handleClear}
-          disabled={nodes.length === 0}
-          title="Clear all nodes"
+          onClick={handleDeleteSelected}
+          disabled={!selectedNodeId}
+          title="Delete selected node"
         >
-          🗑️ Clear
+          🗑️ Delete Node
+        </button>
+        <button 
+          className="toolbar-btn danger"
+          onClick={handleDeleteConnection}
+          disabled={!selectedConnection}
+          title="Delete selected connection"
+        >
+          ➖ Delete Line
+        </button>
+        <button 
+          className="toolbar-btn danger"
+          onClick={handleClearAll}
+          disabled={nodes.length === 0}
+          title="Delete all nodes and connections"
+        >
+          🗑️ Delete All
+        </button>
+      </div>
+
+      <div className="toolbar-group">
+        <button 
+          className="toolbar-btn"
+          onClick={zoomIn}
+          title="Zoom In"
+        >
+          🔍➕
+        </button>
+        <button 
+          className="toolbar-btn"
+          onClick={zoomOut}
+          title="Zoom Out"
+        >
+          🔍➖
+        </button>
+        <button 
+          className="toolbar-btn"
+          onClick={resetZoom}
+          title="Reset Zoom"
+        >
+          🎯
         </button>
       </div>
 

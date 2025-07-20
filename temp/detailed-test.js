@@ -2,9 +2,9 @@ import puppeteer from 'puppeteer';
 
 async function detailedTest() {
   const browser = await puppeteer.launch({ 
-    headless: false,
+    headless: "new",
+    defaultViewport: { width: 1280, height: 720 },
     devtools: true,
-    slowMo: 500  // Slow down for debugging
   });
   const page = await browser.newPage();
   
