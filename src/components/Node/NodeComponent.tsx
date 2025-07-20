@@ -607,7 +607,7 @@ export const NodeComponent: React.FC<NodeComponentProps> = ({ node }) => {
       
       {/* Direct Konva text editing - no overlay needed */}
       
-      {/* Connection points - shown when not editing, with special handling for connection editing/selection */}
+      {/* Connection points - always shown when not editing (original behavior) */}
       {!node.isEditing && (() => {
         const store = useMindmapStore.getState();
         

@@ -122,7 +122,7 @@ export const Toolbar: React.FC = () => {
         <button 
           className="toolbar-btn primary"
           onClick={handleAddNode}
-          title="Add new node"
+          title="Add new node (Cmd+Shift+A)"
         >
           ➕ Add Node
         </button>
@@ -152,7 +152,7 @@ export const Toolbar: React.FC = () => {
           className="toolbar-btn danger"
           onClick={handleDeleteSelected}
           disabled={!selectedNodeId}
-          title="Delete selected node"
+          title="Delete selected node (Cmd+Shift+D)"
         >
           🗑️ Delete Node
         </button>
@@ -168,7 +168,7 @@ export const Toolbar: React.FC = () => {
           className="toolbar-btn danger"
           onClick={handleClearAll}
           disabled={nodes.length === 0}
-          title="Delete all nodes and connections"
+          title="Delete all nodes and connections (Cmd+A → Cmd+Shift+D)"
         >
           🗑️ Delete All
         </button>
@@ -178,21 +178,21 @@ export const Toolbar: React.FC = () => {
         <button 
           className="toolbar-btn"
           onClick={zoomIn}
-          title="Zoom In"
+          title="Zoom In (Cmd+Plus)"
         >
           🔍➕
         </button>
         <button 
           className="toolbar-btn"
           onClick={zoomOut}
-          title="Zoom Out"
+          title="Zoom Out (Cmd+Minus)"
         >
           🔍➖
         </button>
         <button 
           className="toolbar-btn"
           onClick={resetZoom}
-          title="Reset Zoom"
+          title="Reset Zoom (Cmd+0)"
         >
           🎯
         </button>

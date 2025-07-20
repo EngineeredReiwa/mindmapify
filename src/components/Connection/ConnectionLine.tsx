@@ -12,8 +12,7 @@ export const ConnectionLine: React.FC<ConnectionLineProps> = ({ connection }) =>
   const nodes = useMindmapStore(state => state.nodes);
   const canvasState = useMindmapStore(state => state.canvas);
   
-  // Debug: Log when component is rendered
-  console.log(`ConnectionLine rendered - ID: ${connection.id}, isSelected: ${connection.isSelected}`);
+  // Component rendered efficiently
 
   // Find the connected nodes
   const fromNode = nodes.find(node => node.id === connection.from);
@@ -99,40 +98,33 @@ export const ConnectionLine: React.FC<ConnectionLineProps> = ({ connection }) =>
   const shadowColor = connection.isSelected ? 'rgba(0, 123, 255, 0.5)' : 'transparent';
 
   const handleClick = (e: any) => {
-    console.log('ConnectionLine clicked! Event target:', e.target);
-    console.log('Connection ID:', connection.id);
-    console.log('Event details:', e);
-    
-    // Stop event propagation more aggressively
+    // Stop event propagation to prevent canvas stage from processing this click
     e.cancelBubble = true;
     if (e.evt) {
       e.evt.stopPropagation();
       e.evt.preventDefault();
-    }
-    
-    // Also stop Konva's internal event propagation
-    if (e.target) {
-      e.target.stopBubble = true;
     }
     
     selectConnection(connection.id);
-    console.log('selectConnection called with:', connection.id);
   };
 
   const handleDoubleClick = (e: any) => {
+    // Prevent event bubbling to canvas
     e.cancelBubble = true;
     if (e.evt) {
       e.evt.stopPropagation();
       e.evt.preventDefault();
     }
-    console.log('ConnectionLine double-clicked, starting label edit');
-    startEditingConnectionLabel(connection.id);
+    
+    // Only start label editing if not in connection endpoint editing mode
+    if (!canvasState.isEditingConnection) {
+      selectConnection(connection.id);
+      startEditingConnectionLabel(connection.id);
+    }
   };
 
   // Handle endpoint editing
   const handleStartPointClick = (e: any) => {
-    console.log('🟢 Start handle clicked for connection:', connection.id);
-    
     // Stop all event propagation aggressively
     e.cancelBubble = true;
     e.stopPropagation?.();
@@ -155,8 +147,6 @@ export const ConnectionLine: React.FC<ConnectionLineProps> = ({ connection }) =>
   };
 
   const handleEndPointClick = (e: any) => {
-    console.log('🔴 End handle clicked for connection:', connection.id);
-    
     // Stop all event propagation aggressively
     e.cancelBubble = true;
     e.stopPropagation?.();
@@ -184,7 +174,7 @@ export const ConnectionLine: React.FC<ConnectionLineProps> = ({ connection }) =>
       name="connection-group"
       listening={true}
     >
-      {/* Invisible clickable area for better hit detection */}
+      {/* Enhanced invisible clickable area for better hit detection */}
       <Line
         points={[
           startPoint.x, startPoint.y,
@@ -192,7 +182,7 @@ export const ConnectionLine: React.FC<ConnectionLineProps> = ({ connection }) =>
           endPoint.x, endPoint.y,
         ]}
         stroke="transparent"
-        strokeWidth={20}
+        strokeWidth={30} // Increased hit area for better UX
         tension={0.5}
         lineCap="round"
         lineJoin="round"
@@ -202,6 +192,7 @@ export const ConnectionLine: React.FC<ConnectionLineProps> = ({ connection }) =>
         onDblTap={handleDoubleClick}
         listening={true}
         name="connection-hitarea"
+        perfectDrawEnabled={false}
       />
       
       {/* Main connection line */}
@@ -267,14 +258,14 @@ export const ConnectionLine: React.FC<ConnectionLineProps> = ({ connection }) =>
         />
       )}
       
-      {/* Connection editing handles - PRIORITY: render these last to be on top */}
-      {connection.isSelected && (
+      {/* Connection editing handles - higher priority than double-click */}
+      {connection.isSelected && !canvasState.isEditingConnection && (
         <Group name="connection-handles" listening={true}>
           {/* Invisible larger hit areas for better click detection */}
           <Circle
             x={startPoint.x}
             y={startPoint.y}
-            radius={20}
+            radius={25} // Increased hit area
             fill="transparent"
             onClick={handleStartPointClick}
             onTap={handleStartPointClick}
@@ -285,7 +276,7 @@ export const ConnectionLine: React.FC<ConnectionLineProps> = ({ connection }) =>
           <Circle
             x={endPoint.x}
             y={endPoint.y}
-            radius={20}
+            radius={25} // Increased hit area
             fill="transparent"
             onClick={handleEndPointClick}
             onTap={handleEndPointClick}
@@ -299,7 +290,7 @@ export const ConnectionLine: React.FC<ConnectionLineProps> = ({ connection }) =>
             x={startPoint.x}
             y={startPoint.y}
             radius={12}
-            fill={canvasState.isEditingConnection && canvasState.editingConnectionId === connection.id && canvasState.editingEndpoint === 'start' ? "#ffc107" : "#28a745"}
+            fill={"#28a745"}
             stroke="#ffffff"
             strokeWidth={2}
             shadowBlur={4}
@@ -312,13 +303,44 @@ export const ConnectionLine: React.FC<ConnectionLineProps> = ({ connection }) =>
             x={endPoint.x}
             y={endPoint.y}
             radius={12}
-            fill={canvasState.isEditingConnection && canvasState.editingConnectionId === connection.id && canvasState.editingEndpoint === 'end' ? "#ffc107" : "#dc3545"}
+            fill={"#dc3545"}
             stroke="#ffffff"
             strokeWidth={2}
             shadowBlur={4}
             shadowColor="rgba(0,0,0,0.3)"
             listening={false}
             name="end-handle-visual"
+          />
+        </Group>
+      )}
+      
+      {/* Show editing handles when in editing mode */}
+      {canvasState.isEditingConnection && canvasState.editingConnectionId === connection.id && (
+        <Group name="connection-editing-handles" listening={false}>
+          <Circle
+            x={startPoint.x}
+            y={startPoint.y}
+            radius={15}
+            fill={canvasState.editingEndpoint === 'start' ? "#ffc107" : "#28a745"}
+            stroke="#ffffff"
+            strokeWidth={3}
+            shadowBlur={6}
+            shadowColor="rgba(255,193,7,0.5)"
+            listening={false}
+            name="start-handle-editing"
+          />
+          
+          <Circle
+            x={endPoint.x}
+            y={endPoint.y}
+            radius={15}
+            fill={canvasState.editingEndpoint === 'end' ? "#ffc107" : "#dc3545"}
+            stroke="#ffffff"
+            strokeWidth={3}
+            shadowBlur={6}
+            shadowColor="rgba(255,193,7,0.5)"
+            listening={false}
+            name="end-handle-editing"
           />
         </Group>
       )}

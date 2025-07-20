@@ -18,7 +18,7 @@ export const Canvas: React.FC<CanvasProps> = ({ width, height, onCanvasClick }) 
   const canvasState = useCanvasState();
   const nodes = useNodes();
   const connections = useConnections();
-  const { setCanvasOffset, setCanvasZoom, setCanvasDragging, selectNode, selectConnection, deleteConnection, deleteNode, updateConnectionPreview, endConnection, stopAllEditing, saveAndStopAllEditing, startEditingConnectionLabel, updateConnection, stopEditingConnectionLabel, cancelConnectionEndpointEdit, startEditingConnectionEndpoint, updateConnectionEndpoint, undo, redo, addNode } = useMindmapStore();
+  const { setCanvasOffset, setCanvasZoom, setCanvasDragging, selectNode, selectConnection, selectAll, clearSelection, deleteConnection, deleteNode, updateConnectionPreview, endConnection, stopAllEditing, saveAndStopAllEditing, startEditingConnectionLabel, updateConnection, stopEditingConnectionLabel, cancelConnectionEndpointEdit, startEditingConnectionEndpoint, updateConnectionEndpoint, undo, redo, addNode } = useMindmapStore();
 
   // Track last click time for double-click detection
   const lastClickTimeRef = useRef<number>(0);
@@ -229,14 +229,15 @@ export const Canvas: React.FC<CanvasProps> = ({ width, height, onCanvasClick }) 
         }
       }
       
-      // Manual hit testing for connections since Konva events aren't working properly
+      // Simplified connection hit testing - let ConnectionLine components handle their own events
+      // Only perform fallback manual hit testing if needed
       const clickedConnection = connections.find(connection => {
         const fromNode = nodes.find(n => n.id === connection.from);
         const toNode = nodes.find(n => n.id === connection.to);
         
         if (!fromNode || !toNode) return false;
         
-        // Calculate connection bounding box (same as debug rectangle)
+        // Use more precise line distance calculation instead of bounding box
         const fromCenter = {
           x: fromNode.position.x + fromNode.size.width / 2,
           y: fromNode.position.y + fromNode.size.height / 2,
@@ -246,45 +247,53 @@ export const Canvas: React.FC<CanvasProps> = ({ width, height, onCanvasClick }) 
           y: toNode.position.y + toNode.size.height / 2,
         };
         
-        const minX = Math.min(fromCenter.x, toCenter.x) - 30;
-        const minY = Math.min(fromCenter.y, toCenter.y) - 30;
-        const maxX = Math.max(fromCenter.x, toCenter.x) + 30;
-        const maxY = Math.max(fromCenter.y, toCenter.y) + 30;
-        
-        console.log(`Connection ${connection.id} bounds:`, 
-          `minX=${minX.toFixed(0)}, maxX=${maxX.toFixed(0)}, minY=${minY.toFixed(0)}, maxY=${maxY.toFixed(0)}`,
-          `click=(${canvasPosition.x.toFixed(0)}, ${canvasPosition.y.toFixed(0)})`
+        // Calculate distance from click point to line
+        const lineLength = Math.sqrt(
+          Math.pow(toCenter.x - fromCenter.x, 2) + 
+          Math.pow(toCenter.y - fromCenter.y, 2)
         );
         
-        // Check if click is within connection bounding box
-        const isWithin = canvasPosition.x >= minX && 
-               canvasPosition.x <= maxX && 
-               canvasPosition.y >= minY && 
-               canvasPosition.y <= maxY;
+        if (lineLength === 0) return false;
         
-        if (isWithin) {
-          console.log('Click is within connection bounds!');
-        }
+        // Calculate the closest point on the line to the click
+        const t = Math.max(0, Math.min(1, 
+          ((canvasPosition.x - fromCenter.x) * (toCenter.x - fromCenter.x) + 
+           (canvasPosition.y - fromCenter.y) * (toCenter.y - fromCenter.y)) / (lineLength * lineLength)
+        ));
         
-        return isWithin;
+        const closestPoint = {
+          x: fromCenter.x + t * (toCenter.x - fromCenter.x),
+          y: fromCenter.y + t * (toCenter.y - fromCenter.y)
+        };
+        
+        // Calculate distance from click to closest point on line
+        const distance = Math.sqrt(
+          Math.pow(canvasPosition.x - closestPoint.x, 2) + 
+          Math.pow(canvasPosition.y - closestPoint.y, 2)
+        );
+        
+        const hitThreshold = 40; // Increased tolerance for better UX
+        
+        // Distance calculation complete
+        
+        return distance <= hitThreshold;
       });
       
       if (clickedConnection) {
-        console.log('Manual hit test: clicked on connection', clickedConnection.id);
-        
-        // Double-click detection
+        // Double-click detection with improved timing
         const currentTime = Date.now();
         const timeDiff = currentTime - lastClickTimeRef.current;
-        const isDoubleClick = timeDiff < 500 && lastClickConnectionRef.current === clickedConnection.id;
+        const isDoubleClick = timeDiff < 400 && lastClickConnectionRef.current === clickedConnection.id;
         
         lastClickTimeRef.current = currentTime;
         lastClickConnectionRef.current = clickedConnection.id;
         
         if (isDoubleClick) {
-          console.log('Double-click detected on connection:', clickedConnection.id);
-          // Trigger label editing
-          selectConnection(clickedConnection.id);
-          startEditingConnectionLabel(clickedConnection.id);
+          // Only trigger label editing if not in endpoint editing mode
+          if (!canvasState.isEditingConnection) {
+            selectConnection(clickedConnection.id);
+            startEditingConnectionLabel(clickedConnection.id);
+          }
         } else {
           selectConnection(clickedConnection.id);
         }
@@ -396,15 +405,33 @@ export const Canvas: React.FC<CanvasProps> = ({ width, height, onCanvasClick }) 
   // Multi-key shortcut state
   const keySequenceRef = useRef<string[]>([]);
   const sequenceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Key repeat state for zoom
+  const keyRepeatRef = useRef<{key: string, timeout: NodeJS.Timeout | null}>({key: '', timeout: null});
 
 
   // Keyboard shortcuts with multi-key support
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Check if any node is being edited - if so, don't handle global shortcuts
+      // Check if any node is being edited - if so, only allow deletion shortcuts
       const isAnyNodeEditing = nodes.some(node => node.isEditing);
+      const isCommandKey = e.ctrlKey || e.metaKey;
+      
       if (isAnyNodeEditing) {
-        return; // Allow node editing to handle its own keyboard events
+        // During editing, only allow deletion shortcuts
+        if (e.key === 'd' && e.shiftKey && isCommandKey) {
+          e.preventDefault();
+          e.stopPropagation();
+          
+          // Delete the currently editing node
+          const editingNode = nodes.find(node => node.isEditing);
+          if (editingNode) {
+            deleteNode(editingNode.id);
+          }
+          return;
+        }
+        // Allow node editing to handle other keyboard events
+        return;
       }
 
       // Only handle shortcuts when canvas is focused
@@ -428,21 +455,78 @@ export const Canvas: React.FC<CanvasProps> = ({ width, height, onCanvasClick }) 
           
           const currentSequence = keySequenceRef.current.join('');
           
-          // Check for multi-key shortcuts
-          if (currentSequence === 'an') {
-            // Command+A+N: Add Node
+          // Check for single key + modifier shortcuts
+          if (e.key === 'a' && e.shiftKey) {
+            // Command+Shift+A: Add Node
             e.preventDefault();
-            const centerPosition = { x: 300, y: 200 };
-            addNode(centerPosition, 'New Node');
+            
+            // Calculate visible bounds (same logic as toolbar)
+            const zoom = canvasState.zoom;
+            const offset = canvasState.offset;
+            const margin = 100;
+            
+            const visibleBounds = {
+              left: (-offset.x / zoom) + margin,
+              top: (-offset.y / zoom) + margin,
+              right: (-offset.x + window.innerWidth) / zoom - margin,
+              bottom: (-offset.y + window.innerHeight) / zoom - margin,
+            };
+            
+            // Find available position
+            const nodeSize = { width: 120, height: 60 };
+            const gridSpacing = 40;
+            const positions: Array<{x: number, y: number, overlap: number}> = [];
+            
+            for (let row = 0; row < 5; row++) {
+              for (let col = 0; col < 5; col++) {
+                const x = visibleBounds.left + col * (nodeSize.width + gridSpacing);
+                const y = visibleBounds.top + row * (nodeSize.height + gridSpacing);
+                
+                if (x + nodeSize.width <= visibleBounds.right && 
+                    y + nodeSize.height <= visibleBounds.bottom) {
+                  const overlapScore = nodes.reduce((score, node) => {
+                    const dx = Math.abs(node.position.x - x);
+                    const dy = Math.abs(node.position.y - y);
+                    if (dx < nodeSize.width && dy < nodeSize.height) {
+                      return score + 1;
+                    }
+                    return score;
+                  }, 0);
+                  
+                  positions.push({ x, y, overlap: overlapScore });
+                }
+              }
+            }
+            
+            positions.sort((a, b) => a.overlap - b.overlap);
+            const selectedPos = positions[0] || { x: visibleBounds.left, y: visibleBounds.top };
+            
+            addNode({ x: selectedPos.x, y: selectedPos.y }, 'New Node');
             keySequenceRef.current = [];
             return;
-          } else if (currentSequence === 'dn') {
-            // Command+D+N: Delete Node
+          } else if (e.key === 'd' && e.shiftKey) {
+            // Command+Shift+D: Delete selected items (safe deletion)
             e.preventDefault();
-            const selectedNode = nodes.find(node => node.isSelected);
-            if (selectedNode) {
-              deleteNode(selectedNode.id);
+            
+            const selectedNodes = nodes.filter(node => node.isSelected);
+            const selectedConnections = connections.filter(conn => conn.isSelected);
+            
+            if (selectedNodes.length > 0 || selectedConnections.length > 0) {
+              // Delete selected items
+              selectedNodes.forEach(node => deleteNode(node.id));
+              selectedConnections.forEach(conn => deleteConnection(conn.id));
             }
+            // If nothing is selected, do nothing (safety feature)
+            
+            keySequenceRef.current = [];
+            return;
+          } else if (e.key === 'a' && !e.shiftKey) {
+            // Command+A: Select All
+            e.preventDefault();
+            
+            // Select all nodes and connections
+            selectAll();
+            
             keySequenceRef.current = [];
             return;
           }
@@ -491,6 +575,67 @@ export const Canvas: React.FC<CanvasProps> = ({ width, height, onCanvasClick }) 
           e.preventDefault();
           // Command+Y or Command+Shift+Z: Redo
           redo();
+        } else if (e.key === '=' && isCommandKey) {
+          e.preventDefault();
+          // Command+Plus: Zoom In (repeatable)
+          if (!e.repeat || keyRepeatRef.current.key !== 'zoomIn') {
+            // Clear any existing repeat timeout
+            if (keyRepeatRef.current.timeout) {
+              clearTimeout(keyRepeatRef.current.timeout);
+            }
+            keyRepeatRef.current.key = 'zoomIn';
+          }
+          
+          const currentZoom = useMindmapStore.getState().canvas.zoom;
+          const newZoom = Math.min(currentZoom * 1.15, 5); // Slightly smaller step for smoother zoom
+          setCanvasZoom(newZoom);
+          
+          // Set up repeat timeout for continuous zoom
+          keyRepeatRef.current.timeout = setTimeout(() => {
+            keyRepeatRef.current.key = '';
+          }, 100);
+          
+        } else if (e.key === '-' && isCommandKey) {
+          e.preventDefault();
+          // Command+Minus: Zoom Out (repeatable)
+          if (!e.repeat || keyRepeatRef.current.key !== 'zoomOut') {
+            // Clear any existing repeat timeout
+            if (keyRepeatRef.current.timeout) {
+              clearTimeout(keyRepeatRef.current.timeout);
+            }
+            keyRepeatRef.current.key = 'zoomOut';
+          }
+          
+          const currentZoom = useMindmapStore.getState().canvas.zoom;
+          const newZoom = Math.max(currentZoom / 1.15, 0.1); // Slightly smaller step for smoother zoom
+          setCanvasZoom(newZoom);
+          
+          // Set up repeat timeout for continuous zoom
+          keyRepeatRef.current.timeout = setTimeout(() => {
+            keyRepeatRef.current.key = '';
+          }, 100);
+        } else if (e.key === '?' || (e.key === '/' && e.shiftKey)) {
+          e.preventDefault();
+          // Show keyboard shortcuts help
+          alert(
+            'キーボードショートカット:\n\n' +
+            '🎯 メイン操作:\n' +
+            '• Cmd/Ctrl + Shift + A: 新規ノード追加 (Add Node)\n' +
+            '• Cmd/Ctrl + Shift + D: 選択アイテム削除 (Delete)\n' +
+            '• Cmd/Ctrl + A: 全選択 (Select All)\n\n' +
+            '📝 編集操作:\n' +
+            '• Cmd/Ctrl + Z: 元に戻す (Undo)\n' +
+            '• Cmd/Ctrl + Y: やり直し (Redo)\n\n' +
+            '🔍 表示操作:\n' +
+            '• Cmd/Ctrl + Plus: ズームイン\n' +
+            '• Cmd/Ctrl + Minus: ズームアウト\n' +
+            '• Cmd/Ctrl + 0: ズームリセット\n\n' +
+            '⌨️ その他:\n' +
+            '• Delete/Backspace: 選択アイテム削除\n' +
+            '• Escape: 選択解除/操作キャンセル\n' +
+            '• ?: このヘルプを表示\n\n' +
+            '💡 使い方: 全削除は Cmd+A → Cmd+Shift+D の2ステップで安全に！'
+          );
         }
       }
     };
@@ -502,6 +647,14 @@ export const Canvas: React.FC<CanvasProps> = ({ width, height, onCanvasClick }) 
           clearTimeout(sequenceTimeoutRef.current);
         }
         keySequenceRef.current = [];
+      }
+      
+      // Clear zoom repeat state when keys are released
+      if (e.key === '=' || e.key === '-') {
+        if (keyRepeatRef.current.timeout) {
+          clearTimeout(keyRepeatRef.current.timeout);
+        }
+        keyRepeatRef.current.key = '';
       }
     };
 

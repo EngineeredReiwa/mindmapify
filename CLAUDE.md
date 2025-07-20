@@ -12,6 +12,7 @@ Claude Codeでの開発に必要な設計書は以下に整理されています
 - `docs/USER_EXPERIENCE_DESIGN.md` - ユーザージャーニーとUI/UX設計
 - `docs/WIREFRAMES.md` - 詳細なワイヤーフレームとレイアウト設計
 - `docs/IMPLEMENTATION_ROADMAP.md` - **実装ロードマップとタスク管理**
+- `docs/DESIGN_RULE.md` - **デザインシステム・実装チェックリスト**
 
 ## 現在の開発状況
 
@@ -208,6 +209,31 @@ npm run test:dev      # 開発サーバー起動 + テスト実行
 - **コントラスト**: 4.5:1以上
 
 ## 開発時の注意点
+
+### 🎨 UI/UXデザイン（最重要）
+**必ずDESIGN_RULE.mdに従ってください**
+
+#### 必須チェック項目
+- **コントラスト**: 4.5:1以上（`text-gray-900`, `text-gray-600`, `text-blue-600`使用）
+- **タッチターゲット**: 44px以上（ボタン`h-11 w-11`、アイコン`w-10 h-10`）
+- **8pxグリッド**: 全余白は4の倍数（`p-4`, `m-6`, `gap-4`）
+- **角丸一貫性**: ボタン`rounded-lg`、カード`rounded-xl`、入力`rounded-md`
+- **影システム**: インタラクティブ要素に`shadow-elevation-1`、ホバー時`elevation-2`
+- **フォーカス**: `focus:ring-2 focus:ring-blue-500`
+- **キーボードナビゲーション**: Tab移動、Enter/Space操作対応
+
+#### Mindmapify固有デザイン
+- **キャンバス**: `bg-gray-50`背景
+- **ノード**: `min-w-24 min-h-12`、選択時`border-blue-500 shadow-elevation-3`
+- **接続線**: 通常`stroke-gray-500(2px)`、選択時`stroke-blue-500(3px)`
+- **ツールバー**: `bg-white shadow-elevation-2`、アイコン`w-10 h-10 rounded-lg`
+
+#### 禁止事項
+- **真っ黒禁止**: `#000000`使用禁止 → `text-gray-900`使用
+- **小タッチターゲット**: 44px未満禁止
+- **影なしボタン**: インタラクティブ要素に影必須
+- **同色系重複**: 青背景+青ボタン禁止
+- **薄色背景多用**: `-50`系は大領域のみ
 
 ### 状態管理
 - **単一データフロー**: Zustandでシンプルに

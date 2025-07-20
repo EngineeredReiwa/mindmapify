@@ -131,6 +131,28 @@ export const useMindmapStore = create<MindmapState & MindmapActions>()(
       });
     },
 
+    selectAll: () => {
+      set((state) => {
+        // Select all nodes and connections
+        state.nodes.forEach(node => node.isSelected = true);
+        state.connections.forEach(conn => conn.isSelected = true);
+        
+        // Clear single selection IDs since we have multiple selections
+        state.selectedNodeId = undefined;
+        state.selectedConnectionId = undefined;
+      });
+    },
+
+    clearSelection: () => {
+      set((state) => {
+        // Clear all selections
+        state.nodes.forEach(node => node.isSelected = false);
+        state.connections.forEach(conn => conn.isSelected = false);
+        state.selectedNodeId = undefined;
+        state.selectedConnectionId = undefined;
+      });
+    },
+
     startEditing: (id: string) => {
       set((state) => {
         const node = state.nodes.find(n => n.id === id);
