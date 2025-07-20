@@ -1,15 +1,15 @@
-import React, { useState } from 'react';
-import { Line, Circle, Text, Group, Rect } from 'react-konva';
+import React from 'react';
+import { Line, Circle, Text, Group, Shape } from 'react-konva';
 import { useMindmapStore } from '../../stores/mindmapStore';
 import { getConnectionPointPosition, determineConnectionSides } from '../../utils/connectionUtils';
-import type { Connection, Node, Position } from '../../types';
+import type { Connection, Position } from '../../types';
 
 interface ConnectionLineProps {
   connection: Connection;
 }
 
 export const ConnectionLine: React.FC<ConnectionLineProps> = ({ connection }) => {
-  const { selectConnection, startEditingConnectionLabel, startEditingConnectionEndpoint, updateConnectionEndpoint, cancelConnectionEndpointEdit } = useMindmapStore();
+  const { selectConnection, startEditingConnectionLabel, startEditingConnectionEndpoint } = useMindmapStore();
   const nodes = useMindmapStore(state => state.nodes);
   const canvasState = useMindmapStore(state => state.canvas);
   
@@ -43,13 +43,13 @@ export const ConnectionLine: React.FC<ConnectionLineProps> = ({ connection }) =>
 
   const { startPoint, endPoint } = getFixedConnectionPoints();
 
-  // Create smooth curve using quadratic bezier
+  // Create gentle curve using quadratic bezier
   const controlPoint = {
     x: (startPoint.x + endPoint.x) / 2,
-    y: (startPoint.y + endPoint.y) / 2 - 50, // Curve upward slightly
+    y: (startPoint.y + endPoint.y) / 2 - 20, // Gentle curve, reduced from 50
   };
 
-  // Calculate arrow direction using curve tangent at end point for better accuracy
+  // Calculate arrow direction using curve tangent at end point
   // For quadratic bezier, tangent at end point is direction from control point to end point
   const dx = endPoint.x - controlPoint.x;
   const dy = endPoint.y - controlPoint.y;
@@ -75,17 +75,17 @@ export const ConnectionLine: React.FC<ConnectionLineProps> = ({ connection }) =>
     y: arrowTip.y - arrowLength * Math.sin(angle + Math.PI / 5),
   };
 
-  // Calculate label position (middle of the line)
+  // Calculate label position (middle of the gentle curve)
   const labelPosition = {
     x: (startPoint.x + endPoint.x) / 2,
-    y: (startPoint.y + endPoint.y) / 2 - 25,
+    y: (startPoint.y + endPoint.y) / 2 - 30, // Adjusted for gentle curve
   };
 
   // Line style based on selection state - adjusted for editing mode
   const isEditingThis = canvasState.isEditingConnection && canvasState.editingConnectionId === connection.id;
   const strokeColor = connection.isSelected ? '#007bff' : '#495057';
   const strokeWidth = isEditingThis ? 2 : (connection.isSelected ? 3 : 2);
-  const opacity = connection.isSelected ? 1 : 0.8;
+  const opacity = 1; // Always full opacity for consistent color
   const shadowBlur = connection.isSelected ? 8 : 0;
   const shadowColor = connection.isSelected ? 'rgba(0, 123, 255, 0.3)' : 'transparent';
 
@@ -187,12 +187,12 @@ export const ConnectionLine: React.FC<ConnectionLineProps> = ({ connection }) =>
         perfectDrawEnabled={false}
       />
       
-      {/* Main connection line - extended to arrow base */}
+      {/* Main connection line - gentle curve extended to arrow base */}
       <Line
         points={[
           startPoint.x, startPoint.y,
           controlPoint.x, controlPoint.y,
-          arrowTip.x + (arrowLength * 0.7) * Math.cos(angle), arrowTip.y + (arrowLength * 0.7) * Math.sin(angle),
+          (arrowBase1.x + arrowBase2.x) / 2, (arrowBase1.y + arrowBase2.y) / 2,
         ]}
         stroke={strokeColor}
         strokeWidth={strokeWidth}
@@ -208,25 +208,27 @@ export const ConnectionLine: React.FC<ConnectionLineProps> = ({ connection }) =>
         perfectDrawEnabled={false}
       />
       
-      {/* Triangular arrowhead at the end - improved visibility */}
-      <Line
-        points={[
-          arrowTip.x, arrowTip.y,
-          arrowBase1.x, arrowBase1.y,
-          arrowBase2.x, arrowBase2.y,
-          arrowTip.x, arrowTip.y,
-        ]}
+      {/* Triangular arrowhead using Shape for clean rendering */}
+      <Shape
+        sceneFunc={(context, shape) => {
+          context.beginPath();
+          context.moveTo(arrowTip.x, arrowTip.y);
+          context.lineTo(arrowBase1.x, arrowBase1.y);
+          context.lineTo(arrowBase2.x, arrowBase2.y);
+          context.closePath();
+          context.fillStrokeShape(shape);
+        }}
         fill={strokeColor}
-        stroke="none"
+        stroke=""
+        strokeWidth={0}
         opacity={1}
-        closed={true}
         onClick={handleClick}
         onTap={handleClick}
         onDblClick={handleDoubleClick}
         onDblTap={handleDoubleClick}
-        listening={true} // Explicitly enable event listening
-        name="connection-arrow" // For debugging
-        perfectDrawEnabled={false} // Improve performance
+        listening={true}
+        name="connection-arrow"
+        perfectDrawEnabled={false}
       />
 
       {/* Connection label - pure text only */}

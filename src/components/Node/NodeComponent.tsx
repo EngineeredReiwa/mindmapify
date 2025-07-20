@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Rect, Text, Group } from 'react-konva';
 import { useMindmapStore } from '../../stores/mindmapStore';
 // import { TextEditor } from './TextEditor';  // REMOVED - using direct Konva editing
@@ -17,9 +17,9 @@ export const NodeComponent: React.FC<NodeComponentProps> = ({ node }) => {
   const [editingText, setEditingText] = useState(node.text);
   const [cursorPosition, setCursorPosition] = useState(node.text.length);
   const [cursorVisible, setCursorVisible] = useState(true);
-  const [selectedText, setSelectedText] = useState<{start: number, end: number} | null>(null);
-  const textRef = useRef<any>(null);
-  const groupRef = useRef<any>(null);
+  // const [selectedText, setSelectedText] = useState<{start: number, end: number} | null>(null);
+  // const textRef = useRef<any>(null);
+  // const groupRef = useRef<any>(null);
 
   const handleClick = (e: any) => {
     // Prevent event bubbling to canvas to avoid connection hit testing
@@ -116,9 +116,9 @@ export const NodeComponent: React.FC<NodeComponentProps> = ({ node }) => {
     stopEditing(node.id);
   };
 
-  const handleTextChange = (newText: string) => {
-    setEditingText(newText); // Update display text in real-time
-  };
+  // const handleTextChange = (newText: string) => {
+  //   setEditingText(newText); // Update display text in real-time
+  // };
 
   // Auto-save when editing stops (outside click)
   useEffect(() => {
@@ -230,14 +230,14 @@ export const NodeComponent: React.FC<NodeComponentProps> = ({ node }) => {
       if (e.key === 'ArrowLeft') {
         // カーソル左移動
         setCursorPosition(Math.max(0, pos - 1));
-        setSelectedText(null); // 選択解除
+        // setSelectedText(null); // 選択解除
       } else if (e.key === 'ArrowRight') {
         // カーソル右移動
         setCursorPosition(Math.min(currentText.length, pos + 1));
-        setSelectedText(null); // 選択解除
+        // setSelectedText(null); // 選択解除
       } else if (e.key === 'ArrowUp') {
         // カーソル上移動（行間移動）
-        const lines = currentText.split('\n');
+        // const lines = currentText.split('\n');
         const textBeforeCursor = currentText.slice(0, pos);
         const currentLineIndex = textBeforeCursor.split('\n').length - 1;
         
@@ -253,13 +253,14 @@ export const NodeComponent: React.FC<NodeComponentProps> = ({ node }) => {
           const newPos = prevLineStart + newCharIndex;
           setCursorPosition(newPos);
         }
-        setSelectedText(null); // 選択解除
+        // setSelectedText(null); // 選択解除
       } else if (e.key === 'ArrowDown') {
         // カーソル下移動（行間移動）
-        const lines = currentText.split('\n');
+        // const lines = currentText.split('\n');
         const textBeforeCursor = currentText.slice(0, pos);
         const currentLineIndex = textBeforeCursor.split('\n').length - 1;
         
+        const lines = currentText.split('\n');
         if (currentLineIndex < lines.length - 1) {
           const currentLineStart = textBeforeCursor.lastIndexOf('\n') + 1;
           const currentCharIndex = pos - currentLineStart;
@@ -272,16 +273,17 @@ export const NodeComponent: React.FC<NodeComponentProps> = ({ node }) => {
           const newPos = nextLineStart + newCharIndex;
           setCursorPosition(newPos);
         }
-        setSelectedText(null); // 選択解除
+        // setSelectedText(null); // 選択解除
       } else if (e.key === 'Backspace') {
         // バックスペース - ノード削除は禁止、テキスト削除のみ
-        if (selectedText) {
-          // 選択範囲がある場合は削除
-          const newText = currentText.slice(0, selectedText.start) + currentText.slice(selectedText.end);
-          setEditingText(newText);
-          setCursorPosition(selectedText.start);
-          setSelectedText(null);
-        } else if (pos > 0) {
+        // if (selectedText) {
+        //   // 選択範囲がある場合は削除
+        //   const newText = currentText.slice(0, selectedText.start) + currentText.slice(selectedText.end);
+        //   setEditingText(newText);
+        //   setCursorPosition(selectedText.start);
+        //   setSelectedText(null);
+        // } else
+        if (pos > 0) {
           const newText = currentText.slice(0, pos - 1) + currentText.slice(pos);
           setEditingText(newText);
           setCursorPosition(pos - 1);
@@ -289,60 +291,61 @@ export const NodeComponent: React.FC<NodeComponentProps> = ({ node }) => {
         // テキストが空になってもノードは削除しない
       } else if (e.key === 'Delete') {
         // Delete - ノード削除は禁止、テキスト削除のみ
-        if (selectedText) {
-          // 選択範囲がある場合は削除
-          const newText = currentText.slice(0, selectedText.start) + currentText.slice(selectedText.end);
-          setEditingText(newText);
-          setCursorPosition(selectedText.start);
-          setSelectedText(null);
-        } else if (pos < currentText.length) {
+        // if (selectedText) {
+        //   // 選択範囲がある場合は削除
+        //   const newText = currentText.slice(0, selectedText.start) + currentText.slice(selectedText.end);
+        //   setEditingText(newText);
+        //   setCursorPosition(selectedText.start);
+        //   setSelectedText(null);
+        // } else
+        if (pos < currentText.length) {
           const newText = currentText.slice(0, pos) + currentText.slice(pos + 1);
           setEditingText(newText);
         }
         // テキストが空になってもノードは削除しない
       } else if (e.key === 'Enter') {
         // 改行
-        if (selectedText) {
-          // 選択範囲がある場合は置き換えてから改行
-          const newText = currentText.slice(0, selectedText.start) + '\n' + currentText.slice(selectedText.end);
-          setEditingText(newText);
-          setCursorPosition(selectedText.start + 1);
-          setSelectedText(null);
-        } else {
+        // if (selectedText) {
+        //   // 選択範囲がある場合は置き換えてから改行
+        //   const newText = currentText.slice(0, selectedText.start) + '\n' + currentText.slice(selectedText.end);
+        //   setEditingText(newText);
+        //   setCursorPosition(selectedText.start + 1);
+        //   setSelectedText(null);
+        // } else {
           const newText = currentText.slice(0, pos) + '\n' + currentText.slice(pos);
           setEditingText(newText);
           setCursorPosition(pos + 1);
-        }
+        // }
       } else if (e.key === 'Home') {
         // 行の先頭に移動
         const textBeforeCursor = currentText.slice(0, pos);
         const currentLineStart = textBeforeCursor.lastIndexOf('\n') + 1;
         setCursorPosition(currentLineStart);
-        setSelectedText(null); // 選択解除
+        // setSelectedText(null); // 選択解除
       } else if (e.key === 'End') {
         // 行の末尾に移動
         const nextNewlineIndex = currentText.indexOf('\n', pos);
         const currentLineEnd = nextNewlineIndex === -1 ? currentText.length : nextNewlineIndex;
         setCursorPosition(currentLineEnd);
-        setSelectedText(null); // 選択解除
+        // setSelectedText(null); // 選択解除
       } else if (e.key === 'a' && (e.ctrlKey || e.metaKey)) {
         // 全選択
-        setSelectedText({ start: 0, end: currentText.length });
+        // setSelectedText({ start: 0, end: currentText.length });
         setCursorPosition(currentText.length);
       } else if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
         // 通常の文字入力
-        if (selectedText) {
-          // 選択範囲がある場合は置き換え
-          const newText = currentText.slice(0, selectedText.start) + e.key + currentText.slice(selectedText.end);
-          setEditingText(newText);
-          setCursorPosition(selectedText.start + 1);
-          setSelectedText(null); // 選択解除
-        } else {
+        // if (selectedText) {
+        //   // 選択範囲がある場合は置き換え
+        //   const newText = currentText.slice(0, selectedText.start) + e.key + currentText.slice(selectedText.end);
+        //   setEditingText(newText);
+        //   setCursorPosition(selectedText.start + 1);
+        //   // setSelectedText(null); // 選択解除
+        // } else {
           // 通常の挿入
           const newText = currentText.slice(0, pos) + e.key + currentText.slice(pos);
           setEditingText(newText);
           setCursorPosition(pos + 1);
-        }
+        // }
       }
     };
 
@@ -376,6 +379,21 @@ export const NodeComponent: React.FC<NodeComponentProps> = ({ node }) => {
   useEffect(() => {
     if (!canvasState.isConnecting) {
       setActiveConnectionPoint(null);
+    }
+  }, [canvasState.isConnecting]);
+
+  // 接続編集状態が変わったらホバー状態をクリア
+  useEffect(() => {
+    if (!canvasState.isEditingConnection) {
+      setHoveredConnectionPoint(null);
+      setActiveConnectionPoint(null);
+    }
+  }, [canvasState.isEditingConnection]);
+
+  // 接続完了時にもホバー状態をクリア
+  useEffect(() => {
+    if (!canvasState.isConnecting) {
+      setHoveredConnectionPoint(null);
     }
   }, [canvasState.isConnecting]);
 

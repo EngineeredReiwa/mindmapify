@@ -16,9 +16,9 @@ export const ConnectionLabelEditor: React.FC<ConnectionLabelEditorProps> = ({
   onSave,
   onCancel,
 }) => {
-  const [customLabel, setCustomLabel] = useState(
-    RELATION_LABELS.includes(currentLabel as RelationLabel) ? '' : currentLabel
-  );
+  // const [customLabel, setCustomLabel] = useState(
+  //   RELATION_LABELS.includes(currentLabel as RelationLabel) ? '' : currentLabel
+  // );
   const [selectedPreset, setSelectedPreset] = useState<string>(
     RELATION_LABELS.includes(currentLabel as RelationLabel) ? currentLabel : ''
   );
@@ -52,18 +52,18 @@ export const ConnectionLabelEditor: React.FC<ConnectionLabelEditorProps> = ({
 
   const handlePresetClick = (label: string) => {
     setSelectedPreset(label);
-    setCustomLabel('');
+    // setCustomLabel('');
     onSave(label);
   };
 
-  const handleCustomSave = () => {
-    const finalLabel = customLabel.trim();
-    if (finalLabel) {
-      onSave(finalLabel);
-    } else {
-      onCancel();
-    }
-  };
+  // const handleCustomSave = () => {
+  //   const finalLabel = customLabel.trim();
+  //   if (finalLabel) {
+  //     onSave(finalLabel);
+  //   } else {
+  //     onCancel();
+  //   }
+  // };
 
   const handleRemoveLabel = () => {
     onSave(''); // Empty string removes the label

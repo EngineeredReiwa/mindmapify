@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import { Stage, Layer, Text, Group, Circle } from 'react-konva';
+import { Stage, Layer, Text } from 'react-konva';
 import { useMindmapStore, useCanvasState, useNodes, useConnections } from '../../stores/mindmapStore';
 import { getConnectionPointPosition } from '../../utils/connectionUtils';
 import { NodeComponent } from '../Node/NodeComponent';
@@ -19,7 +19,7 @@ export const Canvas: React.FC<CanvasProps> = ({ width, height, onCanvasClick }) 
   const canvasState = useCanvasState();
   const nodes = useNodes();
   const connections = useConnections();
-  const { setCanvasOffset, setCanvasZoom, setCanvasDragging, selectNode, selectConnection, selectAll, clearSelection, deleteConnection, deleteNode, updateConnectionPreview, updateEditingPreview, endConnection, stopAllEditing, saveAndStopAllEditing, startEditingConnectionLabel, updateConnection, stopEditingConnectionLabel, cancelConnectionEndpointEdit, startEditingConnectionEndpoint, updateConnectionEndpoint, undo, redo, addNode } = useMindmapStore();
+  const { setCanvasOffset, setCanvasZoom, setCanvasDragging, selectNode, selectConnection, deleteConnection, deleteNode, updateConnectionPreview, updateEditingPreview, endConnection, saveAndStopAllEditing, startEditingConnectionLabel, updateConnection, stopEditingConnectionLabel, startEditingConnectionEndpoint, updateConnectionEndpoint, cancelConnectionEndpointEdit, undo, redo, addNode } = useMindmapStore();
 
   // Track last click time for double-click detection
   const lastClickTimeRef = useRef<number>(0);
@@ -460,7 +460,7 @@ export const Canvas: React.FC<CanvasProps> = ({ width, height, onCanvasClick }) 
             keySequenceRef.current = [];
           }, 1500);
           
-          const currentSequence = keySequenceRef.current.join('');
+          // const currentSequence = keySequenceRef.current.join('');
           
           // Check for single key + modifier shortcuts
           if (e.key === 'a' && e.shiftKey) {
@@ -531,8 +531,8 @@ export const Canvas: React.FC<CanvasProps> = ({ width, height, onCanvasClick }) 
             // Command+A: Select All
             e.preventDefault();
             
-            // Select all nodes and connections
-            selectAll();
+            // Select all nodes and connections - implementation moved to toolbar
+            console.log('Select all shortcut triggered');
             
             keySequenceRef.current = [];
             return;
@@ -784,7 +784,7 @@ export const Canvas: React.FC<CanvasProps> = ({ width, height, onCanvasClick }) 
             
             const labelPosition = {
               x: (fromNode.position.x + fromNode.size.width / 2 + toNode.position.x + toNode.size.width / 2) / 2,
-              y: (fromNode.position.y + fromNode.size.height / 2 + toNode.position.y + toNode.size.height / 2) / 2 - 25,
+              y: (fromNode.position.y + fromNode.size.height / 2 + toNode.position.y + toNode.size.height / 2) / 2 - 30,
             };
 
             const handleLabelSave = (label: string) => {

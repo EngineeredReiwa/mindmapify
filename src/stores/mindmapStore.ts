@@ -313,7 +313,18 @@ export const useMindmapStore = create<MindmapState & MindmapActions>()(
         const connection = state.connections.find(c => c.id === id);
         if (connection) {
           connection.isEditingLabel = false;
+          // Also clear selection to prevent editing handles from appearing
+          connection.isSelected = false;
         }
+        
+        // Clear connection editing state to prevent unwanted endpoint editing
+        state.canvas.isEditingConnection = false;
+        state.canvas.editingConnectionId = undefined;
+        state.canvas.editingEndpoint = undefined;
+        state.canvas.editingPreviewPosition = undefined;
+        
+        // Clear selected connection ID
+        state.selectedConnectionId = undefined;
       });
     },
 

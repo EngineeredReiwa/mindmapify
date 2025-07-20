@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 // import { Html } from 'react-konva-utils';  // TEMPORARILY DISABLED
 import type { Node } from '../../types';
 
@@ -9,8 +9,8 @@ interface TextEditorProps {
   onChange?: (text: string) => void;
 }
 
-export const TextEditor: React.FC<TextEditorProps> = ({ node, onSave, onCancel, onChange }) => {
-  const [text, setText] = useState(node.text);
+export const TextEditor: React.FC<TextEditorProps> = ({ node }) => {
+  // const [text, setText] = useState(node.text);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // 垂直中央配置のためのパディング計算
@@ -44,42 +44,42 @@ export const TextEditor: React.FC<TextEditorProps> = ({ node, onSave, onCancel, 
     }
   }, []);
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    e.stopPropagation(); // Prevent event bubbling to canvas
-    
-    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
-      // Ctrl+Enter or Cmd+Enter saves the text
-      handleSave();
-    } else if (e.key === 'Escape') {
-      handleCancel();
-    }
-  };
+  // const handleKeyDown = (e: React.KeyboardEvent) => {
+  //   e.stopPropagation(); // Prevent event bubbling to canvas
+  //   
+  //   if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+  //     // Ctrl+Enter or Cmd+Enter saves the text
+  //     handleSave();
+  //   } else if (e.key === 'Escape') {
+  //     handleCancel();
+  //   }
+  // };
 
-  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const newText = e.target.value;
-    setText(newText);
-    onChange?.(newText); // リアルタイム更新
-  };
+  // const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+  //   const newText = e.target.value;
+  //   setText(newText);
+  //   onChange?.(newText); // リアルタイム更新
+  // };
 
-  const handleSave = () => {
-    const trimmedText = text.trim();
-    if (trimmedText.length > 0) {
-      onSave(trimmedText);
-    } else {
-      // If empty, revert to original text
-      onCancel();
-    }
-  };
+  // const handleSave = () => {
+  //   const trimmedText = text.trim();
+  //   if (trimmedText.length > 0) {
+  //     onSave(trimmedText);
+  //   } else {
+  //     // If empty, revert to original text
+  //     onCancel();
+  //   }
+  // };
 
-  const handleCancel = () => {
-    setText(node.text); // Reset to original text
-    onCancel();
-  };
+  // const handleCancel = () => {
+  //   setText(node.text); // Reset to original text
+  //   onCancel();
+  // };
 
-  const handleBlur = () => {
-    // Save on blur (clicking outside)
-    handleSave();
-  };
+  // const handleBlur = () => {
+  //   // Save on blur (clicking outside)
+  //   handleSave();
+  // };
 
   // TEMPORARILY RETURN NULL TO TEST
   return null;
