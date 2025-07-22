@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>接続エンドポイント編集テスト</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f5f5f5;
+            border-radius: 8px;
+        }
+        .test-steps {
+            background: white;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .expected {
+            background: #e8f5e9;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .issue {
+            background: #ffebee;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        code {
+            background: #f0f0f0;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 接続エンドポイント編集機能のテスト手順</h1>
+    
+    <div class="test-section">
+        <h2>📋 問題の説明</h2>
+        <div class="issue">
+            <strong>問題:</strong> 接続線のエンドポイントをドラッグして他のノードの接続点にドロップしても、接続点が緑色になるが実際に接続が変更されない
+        </div>
+        <div class="expected">
+            <strong>期待動作:</strong> 接続線のハンドルをドラッグして他のノードの接続点にドロップすると、接続が新しい接続点に変更される
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>🔧 実装した修正内容</h2>
+        <ol>
+            <li><code>handleConnectionPointMouseUp</code>で接続編集モード時の処理を追加</li>
+            <li>接続点IDから対象ノードIDを抽出して<code>updateConnectionEndpoint</code>を呼び出し</li>
+            <li>接続編集モード中は新しい接続の開始を防止</li>
+            <li>ホバー時のログを追加してデバッグを改善</li>
+        </ol>
+    </div>
+
+    <div class="test-section">
+        <h2>✅ テスト手順</h2>
+        
+        <div class="test-steps">
+            <h3>準備: 接続を作成</h3>
+            <ol>
+                <li>アプリケーションを開く（<a href="http://localhost:5173" target="_blank">http://localhost:5173</a>）</li>
+                <li>ツールバーの「Add Node」ボタンを3回クリックして3つのノードを作成</li>
+                <li>最初のノードの接続点をドラッグして2番目のノードに接続を作成</li>
+                <li>接続線をクリックして選択状態にする</li>
+                <li>接続線に緑（開始）と赤（終了）のハンドルが表示されることを確認</li>
+            </ol>
+        </div>
+
+        <div class="test-steps">
+            <h3>テスト1: 終了点の変更</h3>
+            <ol>
+                <li>赤いハンドル（終了点）をクリックして編集モードに入る</li>
+                <li>3番目のノードの接続点にドラッグ</li>
+                <li>接続点が緑色になることを確認</li>
+                <li>マウスボタンを離す（ドロップ）</li>
+                <li><strong>期待結果:</strong> 接続が2番目のノードから3番目のノードに変更される</li>
+            </ol>
+        </div>
+
+        <div class="test-steps">
+            <h3>テスト2: 開始点の変更</h3>
+            <ol>
+                <li>接続線を再度選択</li>
+                <li>緑のハンドル（開始点）をクリック</li>
+                <li>3番目のノードの接続点にドラッグしてドロップ</li>
+                <li><strong>期待結果:</strong> 接続の開始点が変更される</li>
+            </ol>
+        </div>
+
+        <div class="test-steps">
+            <h3>テスト3: 無効な変更の処理</h3>
+            <ol>
+                <li>接続のハンドルをドラッグして、既に接続されているノード自体にドロップ</li>
+                <li><strong>期待結果:</strong> 変更されないか適切にキャンセルされる</li>
+            </ol>
+        </div>
+
+        <div class="test-steps">
+            <h3>テスト4: キャンセル操作</h3>
+            <ol>
+                <li>接続のハンドルをドラッグ開始</li>
+                <li>空の場所にドロップ（ノードの接続点以外）</li>
+                <li><strong>期待結果:</strong> 編集がキャンセルされ、元の接続が保持される</li>
+            </ol>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>🐛 デバッグ情報</h2>
+        <p>コンソールに以下のメッセージが表示される場合:</p>
+        <ul>
+            <li><code>🔧 Connection endpoint editing - dropping on point: [pointId]</code> - 接続点へのドロップが検出された</li>
+            <li><code>🎯 Hovering over potential connection target: [pointId]</code> - 編集中の接続点ホバーが検出された</li>
+            <li><code>🔧 In editing mode, not starting new connection</code> - 編集モード中の新規接続開始を防いだ</li>
+            <li><code>🔧 Store: Updated connection sides: [sides]</code> - 接続の向きが更新された</li>
+        </ul>
+    </div>
+
+    <div class="test-section">
+        <h2>📝 確認項目チェックリスト</h2>
+        <label><input type="checkbox"> 接続線選択時にハンドルが表示される</label><br>
+        <label><input type="checkbox"> ハンドルクリックで編集モードに入る</label><br>
+        <label><input type="checkbox"> 他のノードの接続点にホバーすると緑色になる</label><br>
+        <label><input type="checkbox"> 接続点にドロップすると接続が変更される</label><br>
+        <label><input type="checkbox"> 空の場所にドロップするとキャンセルされる</label><br>
+        <label><input type="checkbox"> 編集中は新しい接続が開始されない</label>
+    </div>
+
+    <script>
+        // ページロード時にローカルストレージから状態を復元
+        window.addEventListener('load', () => {
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach((checkbox, index) => {
+                const saved = localStorage.getItem(`endpoint-test-check-${index}`);
+                if (saved === 'true') {
+                    checkbox.checked = true;
+                }
+                
+                checkbox.addEventListener('change', (e) => {
+                    localStorage.setItem(`endpoint-test-check-${index}`, e.target.checked);
+                });
+            });
+        });
+    </script>
+</body>
+</html>

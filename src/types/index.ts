@@ -65,12 +65,21 @@ export interface CanvasState {
   editingConnectionId?: string; // ID of connection being edited
   editingEndpoint?: 'start' | 'end'; // Which endpoint is being modified
   editingPreviewPosition?: Position; // Mouse position during endpoint editing for preview
+  originalConnectionState?: { // Store original state for revert capability
+    from: string;
+    to: string;
+    fromSide?: 'top' | 'right' | 'bottom' | 'left';
+    toSide?: 'top' | 'right' | 'bottom' | 'left';
+  };
+  hoveredConnectionPoint?: string; // Currently hovered connection point ID
+  activeConnectionPoint?: string; // Currently active connection point ID
 }
 
 export interface MindmapState {
   nodes: Node[];
   connections: Connection[];
-  selectedNodeId?: string;
+  selectedNodeId?: string; // 主選択ノード（最後に選択されたノード）
+  selectedNodeIds: Set<string>; // 複数選択されたノードのIDセット
   selectedConnectionId?: string;
   canvas: CanvasState;
   history: {
@@ -90,7 +99,14 @@ export interface NodeActions {
   addNode: (position: Position, text?: string) => void;
   updateNode: (id: string, updates: Partial<Node>, saveHistory?: boolean) => void;
   deleteNode: (id: string) => void;
+  deleteSelectedNodes: () => void;
   selectNode: (id: string | undefined) => void;
+  toggleNodeSelection: (id: string) => void;
+  selectNodes: (ids: string[]) => void;
+  selectAll: () => void;
+  clearSelection: () => void;
+  duplicateSelectedNodes: () => void;
+  updateSelectedNodes: (updates: Partial<Node>, saveHistory?: boolean) => void;
   startEditing: (id: string) => void;
   stopEditing: (id: string) => void;
   stopAllEditing: () => void;
@@ -120,6 +136,9 @@ export interface CanvasActions {
   updateConnectionPreview: (endPosition: Position) => void;
   updateEditingPreview: (mousePosition: Position) => void;
   endConnection: (targetConnectionPointId?: string) => void;
+  cancelConnectionCreation: () => void;
+  setHoveredConnectionPoint: (pointId: string | undefined) => void;
+  setActiveConnectionPoint: (pointId: string | undefined) => void;
 }
 
 export interface HistoryActions {

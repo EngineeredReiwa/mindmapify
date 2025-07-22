@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Test Add Node</title>
+</head>
+<body>
+  <h1>Add Node Test</h1>
+  <p>Open browser console and run:</p>
+  <pre>
+// Check if store is available
+console.log('Store available:', !!window.mindmapStore);
+
+// Get current state
+const state = window.mindmapStore?.getState();
+console.log('Current nodes:', state?.nodes);
+
+// Try to add a node
+state?.addNode({ x: 100, y: 100 }, 'Test Node');
+console.log('After adding:', state?.nodes);
+
+// Check toolbar button
+const addButton = document.querySelector('button[title*="Add"]');
+console.log('Add button found:', !!addButton);
+addButton?.click();
+  </pre>
+  
+  <p>Visit <a href="http://localhost:5173" target="_blank">http://localhost:5173</a></p>
+</body>
+</html>

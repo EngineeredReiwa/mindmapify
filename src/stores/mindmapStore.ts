@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
+import { enableMapSet } from 'immer';
 import { v4 as uuidv4 } from 'uuid';
 import { determineConnectionSides } from '../utils/connectionUtils';
 import type { 
@@ -9,6 +10,9 @@ import type {
   Node, 
   MindmapSnapshot 
 } from '../types';
+
+// Enable Immer MapSet plugin to support Set in state
+enableMapSet();
 
 // Default values
 const DEFAULT_NODE_SIZE = { width: 120, height: 60 };
@@ -20,6 +24,9 @@ const DEFAULT_CANVAS_STATE = {
   connectionStartPoint: undefined,
   connectionStartPosition: undefined,
   connectionEndPosition: undefined,
+  originalConnectionState: undefined,
+  hoveredConnectionPoint: undefined,
+  activeConnectionPoint: undefined,
 };
 
 // Initial state
@@ -32,6 +39,7 @@ const initialState: MindmapState = {
   nodes: [],
   connections: [],
   selectedNodeId: undefined,
+  selectedNodeIds: new Set<string>(),
   selectedConnectionId: undefined,
   canvas: DEFAULT_CANVAS_STATE,
   history: {
@@ -76,6 +84,24 @@ export const useMindmapStore = create<MindmapState & MindmapActions>()(
         if (nodeIndex !== -1) {
           Object.assign(state.nodes[nodeIndex], updates);
           
+          // If position was updated, recalculate connection sides for optimal routing
+          if (updates.position) {
+            // Update all connections involving this node to use optimal connection points
+            state.connections.forEach(connection => {
+              if (connection.from === id || connection.to === id) {
+                const fromNode = state.nodes.find(n => n.id === connection.from);
+                const toNode = state.nodes.find(n => n.id === connection.to);
+                
+                if (fromNode && toNode) {
+                  const sides = determineConnectionSides(fromNode, toNode);
+                  connection.fromSide = sides.fromSide;
+                  connection.toSide = sides.toSide;
+                  console.log('🔧 Store: Auto-updated connection sides after node move:', sides);
+                }
+              }
+            });
+          }
+          
           // Save to history if explicitly requested (e.g., drag end)
           if (saveHistory) {
             state.history.past.push(state.history.present);
@@ -103,6 +129,35 @@ export const useMindmapStore = create<MindmapState & MindmapActions>()(
         if (state.selectedNodeId === id) {
           state.selectedNodeId = undefined;
         }
+        state.selectedNodeIds.delete(id);
+        
+        // Save to history
+        state.history.past.push(state.history.present);
+        state.history.present = {
+          nodes: [...state.nodes],
+          connections: [...state.connections],
+        };
+        state.history.future = [];
+      });
+    },
+
+    deleteSelectedNodes: () => {
+      set((state) => {
+        const selectedIds = Array.from(state.selectedNodeIds);
+        if (selectedIds.length === 0) return;
+        
+        // Remove selected nodes
+        state.nodes = state.nodes.filter(node => !state.selectedNodeIds.has(node.id));
+        
+        // Remove all connections to/from selected nodes
+        state.connections = state.connections.filter(
+          conn => !selectedIds.includes(conn.from) && !selectedIds.includes(conn.to)
+        );
+        
+        // Clear selections
+        state.selectedNodeId = undefined;
+        state.selectedNodeIds.clear();
+        state.nodes.forEach(node => node.isSelected = false);
         
         // Save to history
         state.history.past.push(state.history.present);
@@ -120,6 +175,7 @@ export const useMindmapStore = create<MindmapState & MindmapActions>()(
         state.nodes.forEach(node => node.isSelected = false);
         state.connections.forEach(conn => conn.isSelected = false);
         state.selectedConnectionId = undefined;
+        state.selectedNodeIds.clear();
         
         // Set new selection
         state.selectedNodeId = id;
@@ -127,7 +183,99 @@ export const useMindmapStore = create<MindmapState & MindmapActions>()(
           const node = state.nodes.find(n => n.id === id);
           if (node) {
             node.isSelected = true;
+            state.selectedNodeIds.add(id);
           }
+        }
+      });
+    },
+
+    toggleNodeSelection: (id: string) => {
+      set((state) => {
+        const node = state.nodes.find(n => n.id === id);
+        if (!node) return;
+        
+        if (state.selectedNodeIds.has(id)) {
+          // Deselect node
+          node.isSelected = false;
+          state.selectedNodeIds.delete(id);
+          
+          // Update primary selection if needed
+          if (state.selectedNodeId === id) {
+            const remainingIds = Array.from(state.selectedNodeIds);
+            state.selectedNodeId = remainingIds[remainingIds.length - 1] || undefined;
+          }
+        } else {
+          // Select node
+          node.isSelected = true;
+          state.selectedNodeIds.add(id);
+          state.selectedNodeId = id; // Make it the primary selection
+        }
+        
+        // Clear connection selection when selecting nodes
+        state.connections.forEach(conn => conn.isSelected = false);
+        state.selectedConnectionId = undefined;
+      });
+    },
+
+    selectNodes: (ids: string[]) => {
+      set((state) => {
+        // Clear all selections first
+        state.nodes.forEach(node => node.isSelected = false);
+        state.connections.forEach(conn => conn.isSelected = false);
+        state.selectedConnectionId = undefined;
+        state.selectedNodeIds.clear();
+        
+        // Select specified nodes
+        ids.forEach(id => {
+          const node = state.nodes.find(n => n.id === id);
+          if (node) {
+            node.isSelected = true;
+            state.selectedNodeIds.add(id);
+          }
+        });
+        
+        // Set primary selection to last node
+        state.selectedNodeId = ids[ids.length - 1] || undefined;
+      });
+    },
+
+    updateSelectedNodes: (updates: Partial<Node>, saveHistory = false) => {
+      set((state) => {
+        const selectedIds = Array.from(state.selectedNodeIds);
+        if (selectedIds.length === 0) return;
+        
+        // Update all selected nodes
+        selectedIds.forEach(id => {
+          const nodeIndex = state.nodes.findIndex(node => node.id === id);
+          if (nodeIndex !== -1) {
+            Object.assign(state.nodes[nodeIndex], updates);
+            
+            // If position was updated, recalculate connection sides
+            if (updates.position) {
+              state.connections.forEach(connection => {
+                if (connection.from === id || connection.to === id) {
+                  const fromNode = state.nodes.find(n => n.id === connection.from);
+                  const toNode = state.nodes.find(n => n.id === connection.to);
+                  
+                  if (fromNode && toNode) {
+                    const sides = determineConnectionSides(fromNode, toNode);
+                    connection.fromSide = sides.fromSide;
+                    connection.toSide = sides.toSide;
+                  }
+                }
+              });
+            }
+          }
+        });
+        
+        // Save to history if requested
+        if (saveHistory) {
+          state.history.past.push(state.history.present);
+          state.history.present = {
+            nodes: [...state.nodes],
+            connections: [...state.connections],
+          };
+          state.history.future = [];
         }
       });
     },
@@ -135,12 +283,91 @@ export const useMindmapStore = create<MindmapState & MindmapActions>()(
     selectAll: () => {
       set((state) => {
         // Select all nodes and connections
-        state.nodes.forEach(node => node.isSelected = true);
+        state.selectedNodeIds.clear();
+        state.nodes.forEach(node => {
+          node.isSelected = true;
+          state.selectedNodeIds.add(node.id);
+        });
         state.connections.forEach(conn => conn.isSelected = true);
         
-        // Clear single selection IDs since we have multiple selections
-        state.selectedNodeId = undefined;
+        // Set primary selection to last node
+        state.selectedNodeId = state.nodes.length > 0 ? state.nodes[state.nodes.length - 1].id : undefined;
         state.selectedConnectionId = undefined;
+      });
+    },
+
+    duplicateSelectedNodes: () => {
+      set((state) => {
+        const selectedNodeIds = Array.from(state.selectedNodeIds);
+        if (selectedNodeIds.length === 0) return;
+        
+        const duplicatedNodes: Node[] = [];
+        const nodeIdMap = new Map<string, string>(); // old ID -> new ID mapping
+        
+        // Create duplicated nodes
+        selectedNodeIds.forEach(id => {
+          const originalNode = state.nodes.find(n => n.id === id);
+          if (originalNode) {
+            const newId = uuidv4();
+            const duplicatedNode: Node = {
+              ...originalNode,
+              id: newId,
+              position: {
+                x: originalNode.position.x + 50, // Offset by 50px
+                y: originalNode.position.y + 50,
+              },
+              isSelected: true,
+              isEditing: false,
+            };
+            
+            duplicatedNodes.push(duplicatedNode);
+            nodeIdMap.set(id, newId);
+            state.nodes.push(duplicatedNode);
+          }
+        });
+        
+        // Update selections to the new nodes
+        state.selectedNodeIds.clear();
+        duplicatedNodes.forEach(node => {
+          state.selectedNodeIds.add(node.id);
+        });
+        
+        // Set primary selection to last duplicated node
+        state.selectedNodeId = duplicatedNodes.length > 0 ? duplicatedNodes[duplicatedNodes.length - 1].id : undefined;
+        
+        // Clear original selections
+        state.nodes.forEach(node => {
+          if (selectedNodeIds.includes(node.id)) {
+            node.isSelected = false;
+          }
+        });
+        
+        // Duplicate connections between duplicated nodes
+        const originalConnections = [...state.connections];
+        originalConnections.forEach(connection => {
+          const newFromId = nodeIdMap.get(connection.from);
+          const newToId = nodeIdMap.get(connection.to);
+          
+          // Only duplicate connections that are entirely within the duplicated set
+          if (newFromId && newToId) {
+            const duplicatedConnection = {
+              ...connection,
+              id: uuidv4(),
+              from: newFromId,
+              to: newToId,
+              isSelected: false,
+            };
+            state.connections.push(duplicatedConnection);
+          }
+        });
+        
+        // Save to history
+        state.history.past.push(state.history.present);
+        state.history.present = {
+          nodes: [...state.nodes],
+          connections: [...state.connections],
+        };
+        state.history.future = [];
       });
     },
 
@@ -150,6 +377,7 @@ export const useMindmapStore = create<MindmapState & MindmapActions>()(
         state.nodes.forEach(node => node.isSelected = false);
         state.connections.forEach(conn => conn.isSelected = false);
         state.selectedNodeId = undefined;
+        state.selectedNodeIds.clear();
         state.selectedConnectionId = undefined;
       });
     },
@@ -163,6 +391,16 @@ export const useMindmapStore = create<MindmapState & MindmapActions>()(
           state.canvas.editingConnectionId = undefined;
           state.canvas.editingEndpoint = undefined;
           state.canvas.editingPreviewPosition = undefined;
+        }
+        
+        // Stop all other node editing to prevent simultaneous editing
+        const currentlyEditingNodes = state.nodes.filter(n => n.isEditing && n.id !== id);
+        if (currentlyEditingNodes.length > 0) {
+          console.log('🔧 Store: Auto-stopping other node editing before starting new edit:', 
+            currentlyEditingNodes.map(n => n.id));
+          currentlyEditingNodes.forEach(n => {
+            n.isEditing = false;
+          });
         }
         
         const node = state.nodes.find(n => n.id === id);
@@ -340,11 +578,40 @@ export const useMindmapStore = create<MindmapState & MindmapActions>()(
           });
         }
         
+        // Store original connection state for potential revert
+        const connection = state.connections.find(c => c.id === connectionId);
+        if (connection) {
+          state.canvas.originalConnectionState = {
+            from: connection.from,
+            to: connection.to,
+            fromSide: connection.fromSide,
+            toSide: connection.toSide
+          };
+        }
+        
         // Now start connection editing
         state.canvas.isEditingConnection = true;
         state.canvas.editingConnectionId = connectionId;
         state.canvas.editingEndpoint = endpoint;
-        state.canvas.editingPreviewPosition = undefined; // Clear preview position
+        
+        // Initialize preview position to current endpoint position for immediate visual feedback
+        if (connection) {
+          const editingNode = endpoint === 'start' ? 
+            state.nodes.find(n => n.id === connection.from) : 
+            state.nodes.find(n => n.id === connection.to);
+          
+          if (editingNode) {
+            // Set initial preview position to center of the node being edited
+            state.canvas.editingPreviewPosition = {
+              x: editingNode.position.x + editingNode.size.width / 2,
+              y: editingNode.position.y + editingNode.size.height / 2
+            };
+          } else {
+            state.canvas.editingPreviewPosition = { x: 0, y: 0 };
+          }
+        } else {
+          state.canvas.editingPreviewPosition = { x: 0, y: 0 };
+        }
       });
     },
 
@@ -395,11 +662,18 @@ export const useMindmapStore = create<MindmapState & MindmapActions>()(
             connections: [...state.connections],
           };
           
-          // Clear editing state
+          // Clear editing state and original state
           state.canvas.isEditingConnection = false;
           state.canvas.editingConnectionId = undefined;
           state.canvas.editingEndpoint = undefined;
           state.canvas.editingPreviewPosition = undefined;
+          state.canvas.originalConnectionState = undefined;
+          
+          // Also clear any connection creation state to prevent interference
+          state.canvas.isConnecting = false;
+          state.canvas.connectionStartPoint = undefined;
+          state.canvas.connectionStartPosition = undefined;
+          state.canvas.connectionEndPosition = undefined;
           
           console.log('🔧 Store: Editing state cleared');
         } else {
@@ -410,10 +684,30 @@ export const useMindmapStore = create<MindmapState & MindmapActions>()(
 
     cancelConnectionEndpointEdit: () => {
       set((state) => {
+        // If we have original state, revert the connection to its original state
+        if (state.canvas.originalConnectionState && state.canvas.editingConnectionId) {
+          const connection = state.connections.find(c => c.id === state.canvas.editingConnectionId);
+          if (connection) {
+            console.log('🔄 Store: Reverting connection to original state');
+            connection.from = state.canvas.originalConnectionState.from;
+            connection.to = state.canvas.originalConnectionState.to;
+            connection.fromSide = state.canvas.originalConnectionState.fromSide;
+            connection.toSide = state.canvas.originalConnectionState.toSide;
+          }
+        }
+        
+        // Clear all editing state
         state.canvas.isEditingConnection = false;
         state.canvas.editingConnectionId = undefined;
         state.canvas.editingEndpoint = undefined;
         state.canvas.editingPreviewPosition = undefined;
+        state.canvas.originalConnectionState = undefined;
+        
+        // Also clear any connection creation state to prevent interference
+        state.canvas.isConnecting = false;
+        state.canvas.connectionStartPoint = undefined;
+        state.canvas.connectionStartPosition = undefined;
+        state.canvas.connectionEndPosition = undefined;
       });
     },
 
@@ -450,6 +744,19 @@ export const useMindmapStore = create<MindmapState & MindmapActions>()(
         state.canvas.offset = { x: 0, y: 0 };
       });
     },
+    
+    // Connection Point Actions
+    setHoveredConnectionPoint: (pointId: string | undefined) => {
+      set((state) => {
+        state.canvas.hoveredConnectionPoint = pointId;
+      });
+    },
+    
+    setActiveConnectionPoint: (pointId: string | undefined) => {
+      set((state) => {
+        state.canvas.activeConnectionPoint = pointId;
+      });
+    },
 
     setCanvasDragging: (isDragging: boolean) => {
       set((state) => {
@@ -463,6 +770,7 @@ export const useMindmapStore = create<MindmapState & MindmapActions>()(
         state.canvas.connectionStartPoint = connectionPointId;
         state.canvas.connectionStartPosition = startPosition;
         state.canvas.connectionEndPosition = startPosition;
+        state.canvas.activeConnectionPoint = connectionPointId;
       });
     },
 
@@ -534,10 +842,26 @@ export const useMindmapStore = create<MindmapState & MindmapActions>()(
           }
         }
         
-        // Reset connection state
+        // Reset connection state (cancellation or completion)
         state.canvas.isConnecting = false;
         state.canvas.connectionStartPoint = undefined;
         state.canvas.connectionStartPosition = undefined;
+        state.canvas.connectionEndPosition = undefined;
+        state.canvas.activeConnectionPoint = undefined;
+        state.canvas.hoveredConnectionPoint = undefined;
+      });
+    },
+
+    // Cancel connection creation (new method)
+    cancelConnectionCreation: () => {
+      set((state) => {
+        console.log('🔄 Store: Canceling connection creation');
+        // Simply clear connection creation state without creating a connection
+        state.canvas.isConnecting = false;
+        state.canvas.connectionStartPoint = undefined;
+        state.canvas.connectionStartPosition = undefined;
+        state.canvas.activeConnectionPoint = undefined;
+        state.canvas.hoveredConnectionPoint = undefined;
         state.canvas.connectionEndPosition = undefined;
       });
     },

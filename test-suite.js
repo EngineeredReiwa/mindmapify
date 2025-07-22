@@ -35,7 +35,7 @@ const TEST_CATEGORIES = {
   },
   nodes: {
     name: '📝 ノード操作',
-    description: 'テキスト編集・削除・配置',
+    description: 'テキスト編集・削除・配置・日本語入力',
     required: true,
     duration: '45秒'
   },
@@ -92,12 +92,12 @@ class TestRunner {
     }
     
     this.browser = await puppeteer.launch({
-      headless: "new", // 常にヘッドレス（バックグラウンド実行）
+      headless: isHeadless ? "new" : false,
       defaultViewport: { width: 1280, height: 720 },
       args: ['--disable-dev-shm-usage', '--no-sandbox']
     });
     
-    this.page = await browser.newPage();
+    this.page = await this.browser.newPage();
     
     // コンソールログをキャプチャ
     this.page.on('console', msg => {
@@ -105,8 +105,15 @@ class TestRunner {
     });
     
     // アプリケーション起動待ち
-    await this.page.goto('http://localhost:5174', { waitUntil: 'domcontentloaded', timeout: 60000 });
+    await this.page.goto('http://localhost:5173', { waitUntil: 'domcontentloaded', timeout: 60000 });
     await this.page.waitForSelector('canvas', { timeout: 10000 });
+    
+    // ストアの初期化を待つ
+    await this.page.waitForFunction(
+      () => window.mindmapStore !== undefined,
+      { timeout: 5000 }
+    );
+    
     await this.sleep(2000);
     
     console.log('✅ Application loaded successfully\n');
@@ -177,13 +184,23 @@ class TestRunner {
     });
 
     await this.test('Add Node Button', async () => {
-      await this.page.click('button[title*="Add Node"], button:has-text("Add Node")');
+      const addBtn = await this.page.$$eval('button', buttons => {
+        const btn = buttons.find(b => b.textContent?.includes('Add Node'));
+        if (btn) btn.click();
+        return !!btn;
+      });
+      if (!addBtn) throw new Error('Add Node button not found');
       await this.sleep(500);
     });
 
     await this.test('Node Creation', async () => {
       const nodesBefore = await this.page.$$eval('[data-testid*="node"], .konvajs-content text', nodes => nodes.length);
-      await this.page.click('button[title*="Add Node"], button:has-text("Add Node")');
+      const addBtn = await this.page.$$eval('button', buttons => {
+        const btn = buttons.find(b => b.textContent?.includes('Add Node'));
+        if (btn) btn.click();
+        return !!btn;
+      });
+      if (!addBtn) throw new Error('Add Node button not found');
       await this.sleep(500);
       const nodesAfter = await this.page.$$eval('[data-testid*="node"], .konvajs-content text', nodes => nodes.length);
       if (nodesAfter <= nodesBefore) throw new Error('Node not created');
@@ -195,17 +212,24 @@ class TestRunner {
   // ノード操作テスト
   async testNodeOperations() {
     await this.test('Node Text Editing', async () => {
-      // 最初のノードをダブルクリック
+      // 最初のノードをクリックして選択（編集バーが表示される）
       await this.page.evaluate(() => {
         const textNodes = document.querySelectorAll('.konvajs-content text');
         if (textNodes.length > 0) {
-          textNodes[0].dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
+          textNodes[0].dispatchEvent(new MouseEvent('click', { bubbles: true }));
         }
       });
-      await this.sleep(500);
+      await this.sleep(800); // 編集バーの表示を待つ
+      
+      // 編集バーの入力フィールドを探す
+      const editInput = await this.page.$('.edit-bar-input');
+      if (!editInput) {
+        throw new Error('Edit bar input not found');
+      }
       
       // テキスト入力
-      await this.page.keyboard.type('Test Node');
+      await editInput.click({ clickCount: 3 }); // トリプルクリックで全選択
+      await editInput.type('Test Node');
       await this.page.keyboard.press('Enter');
       await this.sleep(500);
     });
@@ -222,6 +246,256 @@ class TestRunner {
       }
     });
 
+    await this.test('Multiple Selection (Ctrl+Click)', async () => {
+      // Create additional nodes for multi-selection testing
+      const addBtn1 = await this.page.$$eval('button', buttons => {
+        const btn = buttons.find(b => b.textContent?.includes('Add Node'));
+        if (btn) btn.click();
+        return !!btn;
+      });
+      if (!addBtn1) throw new Error('Add Node button not found');
+      await this.sleep(300);
+      const addBtn2 = await this.page.$$eval('button', buttons => {
+        const btn = buttons.find(b => b.textContent?.includes('Add Node'));
+        if (btn) btn.click();
+        return !!btn;
+      });
+      if (!addBtn2) throw new Error('Add Node button not found');
+      await this.sleep(500);
+
+      // Test Ctrl+Click multi-selection
+      const nodes = await this.page.$$('.konvajs-content text');
+      if (nodes.length >= 2) {
+        // First node - normal click
+        const box1 = await nodes[0].boundingBox();
+        await this.page.mouse.click(box1.x + box1.width/2, box1.y + box1.height/2);
+        await this.sleep(200);
+
+        // Second node - Ctrl+Click
+        const box2 = await nodes[1].boundingBox();
+        await this.page.keyboard.down('Meta'); // Cmd on Mac
+        await this.page.mouse.click(box2.x + box2.width/2, box2.y + box2.height/2);
+        await this.page.keyboard.up('Meta');
+        await this.sleep(500);
+
+        // Verify multiple selection
+        const selectedCount = await this.page.evaluate(() => {
+          return window.mindmapStore.getState().selectedNodeIds.size;
+        });
+        
+        if (selectedCount < 2) {
+          throw new Error(`Expected 2+ selected nodes, got ${selectedCount}`);
+        }
+      }
+    });
+
+    await this.test('Select All Functionality', async () => {
+      // Test Cmd+A select all
+      await this.page.keyboard.down('Meta');
+      await this.page.keyboard.press('KeyA');
+      await this.page.keyboard.up('Meta');
+      await this.sleep(500);
+
+      // Verify all nodes are selected
+      const totalNodes = await this.page.$$eval('.konvajs-content text', nodes => nodes.length);
+      const selectedCount = await this.page.evaluate(() => {
+        return window.mindmapStore.getState().selectedNodeIds.size;
+      });
+
+      if (selectedCount !== totalNodes) {
+        throw new Error(`Expected all ${totalNodes} nodes selected, got ${selectedCount}`);
+      }
+    });
+
+    await this.test('Multiple Node Drag', async () => {
+      // Clear selection first
+      await this.page.evaluate(() => {
+        window.mindmapStore?.getState().clearSelection();
+      });
+      
+      // Get initial positions
+      const initialPositions = await this.page.evaluate(() => {
+        const store = window.mindmapStore?.getState();
+        if (!store) return [];
+        return store.nodes.map(n => ({
+          id: n.id.substring(0, 8),
+          x: n.position.x,
+          y: n.position.y
+        }));
+      });
+      
+      // Select multiple nodes
+      await this.page.keyboard.down('Meta');
+      await this.page.keyboard.press('KeyA');
+      await this.page.keyboard.up('Meta');
+      await this.sleep(300);
+
+      // Get the first node's center position
+      const firstNodeCenter = await this.page.evaluate(() => {
+        const store = window.mindmapStore?.getState();
+        if (!store || store.nodes.length === 0) return null;
+        const node = store.nodes[0];
+        return {
+          x: node.position.x + node.size.width / 2,
+          y: node.position.y + node.size.height / 2
+        };
+      });
+      
+      if (firstNodeCenter) {
+        // Drag the first node
+        const dragDistance = { x: 100, y: 50 };
+        await this.page.mouse.move(firstNodeCenter.x, firstNodeCenter.y);
+        await this.page.mouse.down();
+        await this.page.mouse.move(firstNodeCenter.x + dragDistance.x, firstNodeCenter.y + dragDistance.y);
+        await this.page.mouse.up();
+        await this.sleep(500);
+        
+        // Check final positions
+        const finalPositions = await this.page.evaluate(() => {
+          const store = window.mindmapStore?.getState();
+          if (!store) return [];
+          return store.nodes.map(n => ({
+            id: n.id.substring(0, 8),
+            x: n.position.x,
+            y: n.position.y
+          }));
+        });
+        
+        // Verify all nodes moved by the same amount
+        let allMovedCorrectly = true;
+        for (let i = 0; i < initialPositions.length; i++) {
+          const deltaX = finalPositions[i].x - initialPositions[i].x;
+          const deltaY = finalPositions[i].y - initialPositions[i].y;
+          
+          if (Math.abs(deltaX - dragDistance.x) > 5 || Math.abs(deltaY - dragDistance.y) > 5) {
+            allMovedCorrectly = false;
+            console.log(`  ❌ Node ${i + 1} moved by (${deltaX}, ${deltaY}) instead of (${dragDistance.x}, ${dragDistance.y})`);
+          }
+        }
+        
+        if (allMovedCorrectly) {
+          console.log(`  ✅ All ${initialPositions.length} nodes moved together by (${dragDistance.x}, ${dragDistance.y})`);
+        } else {
+          throw new Error('Nodes did not move together correctly');
+        }
+      }
+    });
+
+    await this.test('Multi-Select Drag Prevention', async () => {
+      // Clear selection first
+      await this.page.evaluate(() => {
+        window.mindmapStore?.getState().clearSelection();
+      });
+      
+      // Add two nodes for testing
+      for (let i = 0; i < 2; i++) {
+        await this.page.$$eval('button', buttons => {
+          const btn = buttons.find(b => b.textContent?.includes('Add Node'));
+          if (btn) btn.click();
+          return !!btn;
+        });
+        await this.sleep(300);
+      }
+      
+      // Get initial positions
+      const initialPositions = await this.page.evaluate(() => {
+        const store = window.mindmapStore?.getState();
+        if (!store) return [];
+        return store.nodes.map(n => ({
+          id: n.id.substring(0, 8),
+          x: n.position.x,
+          y: n.position.y
+        }));
+      });
+      
+      // Multi-select the first node with Ctrl+Click
+      const firstNode = await this.page.evaluate(() => {
+        const store = window.mindmapStore?.getState();
+        if (!store || store.nodes.length === 0) return null;
+        const node = store.nodes[0];
+        return {
+          x: node.position.x + node.size.width / 2,
+          y: node.position.y + node.size.height / 2
+        };
+      });
+      
+      if (firstNode) {
+        await this.page.keyboard.down(this.isMac ? 'Meta' : 'Control');
+        await this.page.mouse.click(firstNode.x, firstNode.y);
+        await this.page.keyboard.up(this.isMac ? 'Meta' : 'Control');
+        
+        // Immediately try to drag (within 300ms) - this should be prevented
+        await this.sleep(50); // Very short delay
+        await this.page.mouse.move(firstNode.x, firstNode.y);
+        await this.page.mouse.down();
+        await this.page.mouse.move(firstNode.x + 100, firstNode.y + 50);
+        await this.page.mouse.up();
+        
+        // Check positions - they should NOT have changed
+        const positionsAfterAttempt = await this.page.evaluate(() => {
+          const store = window.mindmapStore?.getState();
+          if (!store) return [];
+          return store.nodes.map(n => ({
+            id: n.id.substring(0, 8),
+            x: n.position.x,
+            y: n.position.y
+          }));
+        });
+        
+        let dragPrevented = true;
+        for (let i = 0; i < initialPositions.length; i++) {
+          if (initialPositions[i].x !== positionsAfterAttempt[i].x || 
+              initialPositions[i].y !== positionsAfterAttempt[i].y) {
+            dragPrevented = false;
+            console.log(`  ❌ Node ${i + 1} moved unexpectedly`);
+            break;
+          }
+        }
+        
+        if (!dragPrevented) {
+          throw new Error('Drag should be prevented immediately after multi-select');
+        }
+        
+        console.log('  ✅ Drag prevention working correctly after multi-select');
+        
+        // Now wait for the prevention period to pass
+        await this.sleep(350); // Wait longer than 300ms threshold
+        
+        // Try to drag again - this should work
+        await this.page.mouse.move(firstNode.x, firstNode.y);
+        await this.page.mouse.down();
+        await this.page.mouse.move(firstNode.x + 100, firstNode.y + 50);
+        await this.page.mouse.up();
+        await this.sleep(300);
+        
+        // Check positions - they should have changed now
+        const finalPositions = await this.page.evaluate(() => {
+          const store = window.mindmapStore?.getState();
+          if (!store) return [];
+          return store.nodes.map(n => ({
+            id: n.id.substring(0, 8),
+            x: n.position.x,
+            y: n.position.y
+          }));
+        });
+        
+        let dragWorked = false;
+        for (let i = 0; i < initialPositions.length; i++) {
+          if (initialPositions[i].x !== finalPositions[i].x || 
+              initialPositions[i].y !== finalPositions[i].y) {
+            dragWorked = true;
+            break;
+          }
+        }
+        
+        if (!dragWorked) {
+          throw new Error('Drag should work after prevention period');
+        }
+        
+        console.log('  ✅ Drag works correctly after prevention period');
+      }
+    });
+
     await this.test('Paste Functionality', async () => {
       // Ctrl+V でペースト
       await this.page.keyboard.down('Control');
@@ -230,15 +504,125 @@ class TestRunner {
       await this.sleep(500);
     });
 
+    await this.test('Japanese Input', async () => {
+      // 新しいノードを作成
+      await this.page.$$eval('button', buttons => {
+        const btn = buttons.find(b => b.textContent?.includes('Add Node'));
+        if (btn) btn.click();
+        return !!btn;
+      });
+      await this.sleep(500);
+
+      // 最後に作成されたノードをクリックして選択（編集バーが表示される）
+      await this.page.evaluate(() => {
+        const textNodes = document.querySelectorAll('.konvajs-content text');
+        if (textNodes.length > 0) {
+          const lastNode = textNodes[textNodes.length - 1];
+          lastNode.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        }
+      });
+      await this.sleep(800); // 編集バーの表示を待つ
+
+      // 編集バーの入力フィールドを探す
+      const editInput = await this.page.$('.edit-bar-input');
+      if (!editInput) {
+        throw new Error('Edit bar input not found');
+      }
+
+      // 既存テキストをクリアして日本語テキストを入力
+      await editInput.click({ clickCount: 3 }); // トリプルクリックで全選択
+      const japaneseText = 'マインドマップ作成';
+      await editInput.type(japaneseText);
+      await this.sleep(500);
+      
+      // Enterキーで編集を確定
+      await this.page.keyboard.press('Enter');
+      await this.sleep(500);
+
+      // 入力された日本語テキストの検証
+      const nodeText = await this.page.evaluate(() => {
+        const textNodes = document.querySelectorAll('.konvajs-content text');
+        if (textNodes.length > 0) {
+          const lastNode = textNodes[textNodes.length - 1];
+          return lastNode.textContent || '';
+        }
+        return '';
+      });
+
+      // 日本語が正しく保存されているか確認
+      if (!nodeText.includes('マインドマップ')) {
+        throw new Error(`Japanese text not saved correctly. Got: "${nodeText}"`);
+      }
+
+      // 長い日本語テキストのテスト
+      await this.page.evaluate(() => {
+        const textNodes = document.querySelectorAll('.konvajs-content text');
+        if (textNodes.length > 0) {
+          const lastNode = textNodes[textNodes.length - 1];
+          lastNode.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        }
+      });
+      await this.sleep(800); // 編集バーの表示を待つ
+
+      // 編集バーの入力フィールドで長い日本語テキストを入力
+      const editInput2 = await this.page.$('.edit-bar-input');
+      if (editInput2) {
+        await editInput2.click({ clickCount: 3 }); // 全選択
+        const longJapaneseText = 'これは長い日本語のテストです。複数行にわたる日本語テキストが正しく表示されることを確認します。';
+        await editInput2.type(longJapaneseText);
+        await this.sleep(500);
+        await this.page.keyboard.press('Enter');
+        await this.sleep(500);
+      }
+
+      // 混在テキスト（日本語・英語・数字）のテスト
+      await this.page.$$eval('button', buttons => {
+        const btn = buttons.find(b => b.textContent?.includes('Add Node'));
+        if (btn) btn.click();
+        return !!btn;
+      });
+      await this.sleep(500);
+
+      await this.page.evaluate(() => {
+        const textNodes = document.querySelectorAll('.konvajs-content text');
+        if (textNodes.length > 0) {
+          const lastNode = textNodes[textNodes.length - 1];
+          lastNode.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        }
+      });
+      await this.sleep(800); // 編集バーの表示を待つ
+
+      // 混在テキストを入力
+      const editInput3 = await this.page.$('.edit-bar-input');
+      if (editInput3) {
+        await editInput3.click({ clickCount: 3 }); // 全選択
+        const mixedText = 'プロジェクト2025年計画ABC';
+        await editInput3.type(mixedText);
+        await this.sleep(500);
+        await this.page.keyboard.press('Enter');
+        await this.sleep(500);
+      }
+
+      console.log('  📝 Japanese input test completed');
+    });
+
     await this.screenshot('node-operations');
   }
 
   // 接続システムテスト
   async testConnectionSystem() {
     // 複数ノード作成
-    await this.page.click('button[title*="Add Node"], button:has-text("Add Node")');
+    await this.page.$$eval('button', buttons => {
+      const btn = buttons.find(b => b.textContent?.includes('Add Node'));
+      if (btn) btn.click();
+      return !!btn;
+    });
     await this.sleep(200);
-    await this.page.click('button[title*="Add Node"], button:has-text("Add Node")');
+    await this.page.$$eval('button', buttons => {
+      const btn = buttons.find(b => b.textContent?.includes('Add Node'));
+      if (btn) btn.click();
+      return !!btn;
+    });
     await this.sleep(500);
 
     await this.test('Connection Creation', async () => {
@@ -315,6 +699,76 @@ class TestRunner {
       await this.sleep(500);
     });
 
+    await this.test('Select All (Cmd+A)', async () => {
+      // Clear any selection first
+      await this.page.evaluate(() => {
+        window.mindmapStore?.getState().clearSelection();
+      });
+      
+      // Press Cmd+A
+      await this.page.keyboard.down('Meta');
+      await this.page.keyboard.press('KeyA');
+      await this.page.keyboard.up('Meta');
+      await this.sleep(500);
+      
+      // Verify all nodes are selected
+      const selectionState = await this.page.evaluate(() => {
+        const store = window.mindmapStore?.getState();
+        if (!store) return { selectedCount: 0, totalNodes: 0 };
+        return {
+          selectedCount: store.selectedNodeIds.size,
+          totalNodes: store.nodes.length,
+          allSelected: store.nodes.every(n => n.isSelected)
+        };
+      });
+      
+      console.log('Select All result:', selectionState);
+    });
+
+    await this.test('Multiple Selection (Ctrl+Click)', async () => {
+      // Clear selection
+      await this.page.evaluate(() => {
+        window.mindmapStore?.getState().clearSelection();
+      });
+      
+      // Get node positions
+      const nodes = await this.page.evaluate(() => {
+        const store = window.mindmapStore?.getState();
+        if (!store) return [];
+        return store.nodes.slice(0, 2).map(n => ({
+          id: n.id,
+          center: {
+            x: n.position.x + n.size.width / 2,
+            y: n.position.y + n.size.height / 2
+          }
+        }));
+      });
+      
+      if (nodes.length >= 2) {
+        // Ctrl+Click first node
+        await this.page.keyboard.down('Meta');
+        await this.page.mouse.click(nodes[0].center.x, nodes[0].center.y);
+        await this.sleep(300);
+        
+        // Ctrl+Click second node
+        await this.page.mouse.click(nodes[1].center.x, nodes[1].center.y);
+        await this.sleep(300);
+        await this.page.keyboard.up('Meta');
+        
+        // Check selection
+        const multiSelectState = await this.page.evaluate(() => {
+          const store = window.mindmapStore?.getState();
+          if (!store) return { selectedCount: 0 };
+          return {
+            selectedCount: store.selectedNodeIds.size,
+            selectedIds: Array.from(store.selectedNodeIds)
+          };
+        });
+        
+        console.log('Multi-select result:', multiSelectState);
+      }
+    });
+
     await this.screenshot('keyboard-shortcuts');
   }
 
@@ -362,9 +816,17 @@ class TestRunner {
   // Mermaidコード生成テスト
   async testMermaidGeneration() {
     // サンプルデータ作成
-    await this.page.click('button[title*="Add Node"], button:has-text("Add Node")');
+    await this.page.$$eval('button', buttons => {
+      const btn = buttons.find(b => b.textContent?.includes('Add Node'));
+      if (btn) btn.click();
+      return !!btn;
+    });
     await this.sleep(200);
-    await this.page.click('button[title*="Add Node"], button:has-text("Add Node")');
+    await this.page.$$eval('button', buttons => {
+      const btn = buttons.find(b => b.textContent?.includes('Add Node'));
+      if (btn) btn.click();
+      return !!btn;
+    });
     await this.sleep(500);
 
     await this.test('Mermaid Code Generation', async () => {
@@ -458,16 +920,17 @@ class TestRunner {
             textNodes[index].dispatchEvent(new MouseEvent('click', { bubbles: true }));
           }
         }, i);
-        await this.sleep(200);
+        await this.sleep(800); // 編集バーの表示を待つ
         
-        // 既存テキストを選択してクリア
-        await this.page.keyboard.down('Meta');
-        await this.page.keyboard.press('KeyA');
-        await this.page.keyboard.up('Meta');
-        
-        await this.page.keyboard.type(topics[i]);
-        await this.page.keyboard.press('Enter');
-        await this.sleep(200);
+        // 編集バーの入力フィールドを探す
+        const editInput = await this.page.$('.edit-bar-input');
+        if (editInput) {
+          // 既存テキストを選択してクリア
+          await editInput.click({ clickCount: 3 }); // トリプルクリックで全選択
+          await editInput.type(topics[i]);
+          await this.page.keyboard.press('Enter');
+          await this.sleep(200);
+        }
       }
     });
 
@@ -761,7 +1224,7 @@ Options:
 
 Test Categories:
   basic        🏗️ 基本機能（ノード作成・編集・移動）
-  nodes        📝 ノード操作（テキスト編集・削除・配置）
+  nodes        📝 ノード操作（テキスト編集・削除・配置・日本語入力）
   connections  🔗 接続システム（接続線作成・編集・ラベル）
   shortcuts    ⌨️ キーボードショートカット（ショートカット・履歴機能）
   ui           🎨 UI/UX（スクロール・ズーム・ツールバー）

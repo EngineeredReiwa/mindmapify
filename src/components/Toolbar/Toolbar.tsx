@@ -10,6 +10,7 @@ export const Toolbar: React.FC = () => {
   const selectedConnection = connections.find(conn => conn.isSelected);
 
   const handleAddNode = () => {
+    console.log('🎯 Add Node button clicked!');
     // Find a position within the visible area, preferring non-overlapping spots
     const findBestPosition = () => {
       // Get current canvas state for visible area calculation
@@ -86,7 +87,9 @@ export const Toolbar: React.FC = () => {
     };
     
     const position = findBestPosition();
+    console.log('🎯 Adding node at position:', position);
     addNode(position, 'New Node');
+    console.log('🎯 Add node called, current nodes:', useMindmapStore.getState().nodes.length);
   };
 
   const handleDeleteSelected = () => {

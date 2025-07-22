@@ -1,469 +1,116 @@
 import React, { useState, useEffect } from 'react';
 import { Rect, Text, Group } from 'react-konva';
 import { useMindmapStore } from '../../stores/mindmapStore';
-// import { TextEditor } from './TextEditor';  // REMOVED - using direct Konva editing
 import { ConnectionPointComponent } from './ConnectionPoint';
-import type { Node, ConnectionPoint, Position } from '../../types';
+import type { Node, ConnectionPoint } from '../../types';
 
 interface NodeComponentProps {
   node: Node;
 }
 
 export const NodeComponent: React.FC<NodeComponentProps> = ({ node }) => {
-  const { updateNode, selectNode, startEditing, stopEditing, startConnection, endConnection, updateConnectionEndpoint, cancelConnectionEndpointEdit } = useMindmapStore();
+  const { updateNode, selectNode, startEditing, toggleNodeSelection, setHoveredConnectionPoint, setActiveConnectionPoint } = useMindmapStore();
+  const selectedNodeIds = useMindmapStore(state => state.selectedNodeIds);
   const canvasState = useMindmapStore(state => state.canvas);
-  const [hoveredConnectionPoint, setHoveredConnectionPoint] = useState<string | null>(null);
-  const [activeConnectionPoint, setActiveConnectionPoint] = useState<string | null>(null);
-  const [editingText, setEditingText] = useState(node.text);
-  const [cursorPosition, setCursorPosition] = useState(node.text.length);
-  const [cursorVisible, setCursorVisible] = useState(true);
-  // const [selectedText, setSelectedText] = useState<{start: number, end: number} | null>(null);
-  // const textRef = useRef<any>(null);
-  // const groupRef = useRef<any>(null);
+  
+  // ダブルクリック検出用の状態
+  const [lastClickTime, setLastClickTime] = useState(0);
+  const [clickTimeout, setClickTimeout] = useState<NodeJS.Timeout | null>(null);
+  
+  // 複数ノードドラッグ用の状態
+  const [dragStartPosition, setDragStartPosition] = useState<{x: number, y: number} | null>(null);
+  const [otherNodesStartPositions, setOtherNodesStartPositions] = useState<Map<string, {x: number, y: number}>>(new Map());
+  
+  // マルチセレクト後のドラッグ防止用の状態
+  const [lastMultiSelectTime, setLastMultiSelectTime] = useState(0);
+  const [isDragAllowed, setIsDragAllowed] = useState(true);
 
   const handleClick = (e: any) => {
-    // Prevent event bubbling to canvas to avoid connection hit testing
+    // Prevent event bubbling to canvas
     e.cancelBubble = true;
     if (e.evt) {
       e.evt.stopPropagation();
       e.evt.preventDefault();
     }
     
-    // Check if we're in connection endpoint editing mode
-    if (canvasState.isEditingConnection && canvasState.editingConnectionId && canvasState.editingEndpoint) {
-      console.log('🎯 Node clicked during connection editing - updating endpoint to:', node.id);
-      
-      // Update the connection endpoint to this node
-      updateConnectionEndpoint(canvasState.editingConnectionId, node.id);
-      
-      // Exit connection editing mode
-      cancelConnectionEndpointEdit();
-      
-      console.log('✅ Connection endpoint updated and editing mode exited');
+    // Capture modifier keys immediately
+    const isCtrlOrCmd = e.evt && (e.evt.ctrlKey || e.evt.metaKey);
+    
+    // If Ctrl/Cmd is held, toggle selection
+    if (isCtrlOrCmd) {
+      toggleNodeSelection(node.id);
+      setLastMultiSelectTime(Date.now()); // Record multi-select time
+      setIsDragAllowed(false); // Disable drag immediately
+      // Re-enable drag after a short delay
+      setTimeout(() => {
+        setIsDragAllowed(true);
+      }, 300);
       return;
     }
     
-    // 1クリックで必ず選択 + 編集開始（元の仕様を維持）
-    console.log('Node clicked, isEditing:', node.isEditing);
+    // ダブルクリック検出
+    const currentTime = Date.now();
+    const timeDiff = currentTime - lastClickTime;
     
-    if (node.isEditing) {
-      // 既に編集中の場合は自動保存して編集終了
-      console.log('Node clicked while editing - auto-saving');
-      if (editingText !== node.text) {
-        handleTextSave(editingText);
-      } else {
-        stopEditing(node.id);
+    // ダブルクリック判定（400ms以内の連続クリック）
+    if (timeDiff < 400) {
+      console.log('🚫 Double-click detected - ignoring to prevent edit issues');
+      if (clickTimeout) {
+        clearTimeout(clickTimeout);
+        setClickTimeout(null);
       }
+      setLastClickTime(currentTime);
       return;
     }
     
-    console.log('Starting edit immediately');
+    setLastClickTime(currentTime);
+    
+    // シングルクリック処理を少し遅延
+    if (clickTimeout) {
+      clearTimeout(clickTimeout);
+    }
+    
+    const timeout = setTimeout(() => {
+      handleSingleClick();
+      setClickTimeout(null);
+    }, 200);
+    
+    setClickTimeout(timeout);
+  };
+
+  const handleSingleClick = () => {
+    // 1クリックで選択 + 編集開始
+    console.log('Node clicked, starting edit');
     selectNode(node.id);
-    setEditingText(node.text);
     startEditing(node.id);
-    console.log('Edit mode started');
   };
 
-
-  const handleTextSave = (newText: string) => {
-    // 最終的なノードサイズ計算（自動折り返し考慮）
-    const lineHeight = 20;
-    const padding = 16;
-    const minWidth = 120;
-    const maxWidth = 300;
-    const minHeight = 60;
-    const charWidth = 8;
-    
-    // 手動改行による行分割
-    const manualLines = newText.split('\n');
-    
-    // 各手動改行行について、自動折り返しを考慮した実際の行数を計算
-    let totalDisplayLines = 0;
-    let maxRequiredWidth = minWidth;
-    
-    for (const line of manualLines) {
-      if (line.length === 0) {
-        totalDisplayLines += 1;
-        continue;
-      }
-      
-      const lineRequiredWidth = line.length * charWidth + padding;
-      maxRequiredWidth = Math.max(maxRequiredWidth, Math.min(maxWidth, lineRequiredWidth));
-      
-      const availableWidth = Math.min(maxWidth, Math.max(minWidth, lineRequiredWidth)) - padding;
-      const charsPerLine = Math.floor(availableWidth / charWidth);
-      const wrappedLines = Math.ceil(line.length / charsPerLine) || 1;
-      
-      totalDisplayLines += wrappedLines;
-    }
-    
-    const finalWidth = Math.max(minWidth, Math.min(maxWidth, maxRequiredWidth));
-    const finalHeight = Math.max(minHeight, totalDisplayLines * lineHeight + padding);
-    
-    updateNode(node.id, { 
-      text: newText,
-      size: {
-        width: finalWidth,
-        height: finalHeight,
-      }
-    }, true); // true = save to history
-    stopEditing(node.id);
-    selectNode(undefined); // Clear selection after save
+  const handleDoubleClick = () => {
+    // Double click is handled by single click logic
   };
 
-  const handleTextCancel = () => {
-    setEditingText(node.text); // Reset to original text
-    stopEditing(node.id);
-  };
-
-  // const handleTextChange = (newText: string) => {
-  //   setEditingText(newText); // Update display text in real-time
-  // };
-
-  // Auto-save when editing stops (outside click)
+  // クリーンアップ
   useEffect(() => {
-    // If editing was stopped but we have unsaved changes, auto-save them
-    if (!node.isEditing && editingText !== node.text) {
-      console.log('Auto-saving changes on edit end:', editingText);
-      
-      // Inline auto-save logic to avoid stale closure issues
-      const lineHeight = 20;
-      const padding = 16;
-      const minWidth = 120;
-      const maxWidth = 300;
-      const minHeight = 60;
-      const charWidth = 8;
-      
-      // 手動改行による行分割
-      const manualLines = editingText.split('\n');
-      
-      // 各手動改行行について、自動折り返しを考慮した実際の行数を計算
-      let totalDisplayLines = 0;
-      let maxRequiredWidth = minWidth;
-      
-      for (const line of manualLines) {
-        if (line.length === 0) {
-          totalDisplayLines += 1;
-          continue;
-        }
-        
-        const lineRequiredWidth = line.length * charWidth + padding;
-        maxRequiredWidth = Math.max(maxRequiredWidth, Math.min(maxWidth, lineRequiredWidth));
-        
-        const availableWidth = Math.min(maxWidth, Math.max(minWidth, lineRequiredWidth)) - padding;
-        const charsPerLine = Math.floor(availableWidth / charWidth);
-        const wrappedLines = Math.ceil(line.length / charsPerLine) || 1;
-        
-        totalDisplayLines += wrappedLines;
-      }
-      
-      const finalWidth = Math.max(minWidth, Math.min(maxWidth, maxRequiredWidth));
-      const finalHeight = Math.max(minHeight, totalDisplayLines * lineHeight + padding);
-      
-      updateNode(node.id, { 
-        text: editingText,
-        size: {
-          width: finalWidth,
-          height: finalHeight,
-        }
-      });
-      stopEditing(node.id);
-      selectNode(undefined); // Clear selection after save
-    }
-  }, [node.isEditing, editingText, node.text, node.id, updateNode, stopEditing, selectNode]);
-
-  // 文字入力とカーソル移動を含むキーボードハンドリング
-  useEffect(() => {
-    if (!node.isEditing) return;
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      console.log('Key pressed:', e.key, 'editing:', node.isEditing, 'cursor:', cursorPosition);
-      
-      const currentText = editingText;
-      const pos = cursorPosition;
-
-      // 制御キーの処理
-      if (e.key === 'Escape') {
-        e.preventDefault();
-        e.stopPropagation();
-        handleTextCancel();
-        return;
-      } else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
-        e.preventDefault();
-        e.stopPropagation();
-        handleTextSave(editingText);
-        return;
-      } else if (e.key === 'v' && (e.ctrlKey || e.metaKey)) {
-        // Ctrl+V または Cmd+V でペースト
-        console.log('Paste command detected!');
-        e.preventDefault();
-        e.stopPropagation();
-        
-        // クリップボードからテキストを取得してペースト
-        if (navigator.clipboard && navigator.clipboard.readText) {
-          navigator.clipboard.readText().then(clipboardText => {
-            console.log('Clipboard content:', clipboardText);
-            if (clipboardText) {
-              const currentText = editingText;
-              const pos = cursorPosition;
-              const newText = currentText.slice(0, pos) + clipboardText + currentText.slice(pos);
-              console.log('Setting new text:', newText);
-              setEditingText(newText);
-              setCursorPosition(pos + clipboardText.length);
-            }
-          }).catch(err => {
-            console.log('Modern clipboard read failed:', err);
-            // フォールバックの処理をユーザーに案内
-            alert('ペースト機能を使用するには、ブラウザでクリップボードアクセスを許可してください。\nまたは、右クリック → 貼り付けを使用してください。');
-          });
-        } else {
-          console.log('Clipboard API not available');
-          alert('このブラウザではクリップボードAPIが利用できません。\n右クリック → 貼り付けを使用してください。');
-        }
-        return;
-      }
-
-      // 通常の編集操作
-      e.preventDefault(); // ブラウザのデフォルト動作を防ぐ
-      e.stopPropagation(); // Canvasのキーボードハンドリングを防ぐ
-
-      if (e.key === 'ArrowLeft') {
-        // カーソル左移動
-        setCursorPosition(Math.max(0, pos - 1));
-        // setSelectedText(null); // 選択解除
-      } else if (e.key === 'ArrowRight') {
-        // カーソル右移動
-        setCursorPosition(Math.min(currentText.length, pos + 1));
-        // setSelectedText(null); // 選択解除
-      } else if (e.key === 'ArrowUp') {
-        // カーソル上移動（行間移動）
-        // const lines = currentText.split('\n');
-        const textBeforeCursor = currentText.slice(0, pos);
-        const currentLineIndex = textBeforeCursor.split('\n').length - 1;
-        
-        if (currentLineIndex > 0) {
-          const currentLineStart = textBeforeCursor.lastIndexOf('\n') + 1;
-          const currentCharIndex = pos - currentLineStart;
-          
-          const prevLineStart = currentText.lastIndexOf('\n', currentLineStart - 2) + 1;
-          const prevLineEnd = currentLineStart - 1;
-          const prevLineLength = prevLineEnd - prevLineStart;
-          
-          const newCharIndex = Math.min(currentCharIndex, prevLineLength);
-          const newPos = prevLineStart + newCharIndex;
-          setCursorPosition(newPos);
-        }
-        // setSelectedText(null); // 選択解除
-      } else if (e.key === 'ArrowDown') {
-        // カーソル下移動（行間移動）
-        // const lines = currentText.split('\n');
-        const textBeforeCursor = currentText.slice(0, pos);
-        const currentLineIndex = textBeforeCursor.split('\n').length - 1;
-        
-        const lines = currentText.split('\n');
-        if (currentLineIndex < lines.length - 1) {
-          const currentLineStart = textBeforeCursor.lastIndexOf('\n') + 1;
-          const currentCharIndex = pos - currentLineStart;
-          
-          const nextLineStart = currentText.indexOf('\n', pos) + 1;
-          const nextLineEnd = currentText.indexOf('\n', nextLineStart);
-          const nextLineLength = nextLineEnd === -1 ? currentText.length - nextLineStart : nextLineEnd - nextLineStart;
-          
-          const newCharIndex = Math.min(currentCharIndex, nextLineLength);
-          const newPos = nextLineStart + newCharIndex;
-          setCursorPosition(newPos);
-        }
-        // setSelectedText(null); // 選択解除
-      } else if (e.key === 'Backspace') {
-        // バックスペース - ノード削除は禁止、テキスト削除のみ
-        // if (selectedText) {
-        //   // 選択範囲がある場合は削除
-        //   const newText = currentText.slice(0, selectedText.start) + currentText.slice(selectedText.end);
-        //   setEditingText(newText);
-        //   setCursorPosition(selectedText.start);
-        //   setSelectedText(null);
-        // } else
-        if (pos > 0) {
-          const newText = currentText.slice(0, pos - 1) + currentText.slice(pos);
-          setEditingText(newText);
-          setCursorPosition(pos - 1);
-        }
-        // テキストが空になってもノードは削除しない
-      } else if (e.key === 'Delete') {
-        // Delete - ノード削除は禁止、テキスト削除のみ
-        // if (selectedText) {
-        //   // 選択範囲がある場合は削除
-        //   const newText = currentText.slice(0, selectedText.start) + currentText.slice(selectedText.end);
-        //   setEditingText(newText);
-        //   setCursorPosition(selectedText.start);
-        //   setSelectedText(null);
-        // } else
-        if (pos < currentText.length) {
-          const newText = currentText.slice(0, pos) + currentText.slice(pos + 1);
-          setEditingText(newText);
-        }
-        // テキストが空になってもノードは削除しない
-      } else if (e.key === 'Enter') {
-        // 改行
-        // if (selectedText) {
-        //   // 選択範囲がある場合は置き換えてから改行
-        //   const newText = currentText.slice(0, selectedText.start) + '\n' + currentText.slice(selectedText.end);
-        //   setEditingText(newText);
-        //   setCursorPosition(selectedText.start + 1);
-        //   setSelectedText(null);
-        // } else {
-          const newText = currentText.slice(0, pos) + '\n' + currentText.slice(pos);
-          setEditingText(newText);
-          setCursorPosition(pos + 1);
-        // }
-      } else if (e.key === 'Home') {
-        // 行の先頭に移動
-        const textBeforeCursor = currentText.slice(0, pos);
-        const currentLineStart = textBeforeCursor.lastIndexOf('\n') + 1;
-        setCursorPosition(currentLineStart);
-        // setSelectedText(null); // 選択解除
-      } else if (e.key === 'End') {
-        // 行の末尾に移動
-        const nextNewlineIndex = currentText.indexOf('\n', pos);
-        const currentLineEnd = nextNewlineIndex === -1 ? currentText.length : nextNewlineIndex;
-        setCursorPosition(currentLineEnd);
-        // setSelectedText(null); // 選択解除
-      } else if (e.key === 'a' && (e.ctrlKey || e.metaKey)) {
-        // 全選択
-        // setSelectedText({ start: 0, end: currentText.length });
-        setCursorPosition(currentText.length);
-      } else if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
-        // 通常の文字入力
-        // if (selectedText) {
-        //   // 選択範囲がある場合は置き換え
-        //   const newText = currentText.slice(0, selectedText.start) + e.key + currentText.slice(selectedText.end);
-        //   setEditingText(newText);
-        //   setCursorPosition(selectedText.start + 1);
-        //   // setSelectedText(null); // 選択解除
-        // } else {
-          // 通常の挿入
-          const newText = currentText.slice(0, pos) + e.key + currentText.slice(pos);
-          setEditingText(newText);
-          setCursorPosition(pos + 1);
-        // }
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
     return () => {
-      document.removeEventListener('keydown', handleKeyDown);
+      if (clickTimeout) {
+        clearTimeout(clickTimeout);
+      }
+      // Reset connection point states on unmount if this node owns them
+      if (canvasState.hoveredConnectionPoint?.includes(node.id)) {
+        setHoveredConnectionPoint(undefined);
+      }
+      if (canvasState.activeConnectionPoint?.includes(node.id)) {
+        setActiveConnectionPoint(undefined);
+      }
     };
-  }, [node.isEditing, editingText, cursorPosition]);
-
-  // 編集モード開始時の初期化
-  useEffect(() => {
-    if (node.isEditing) {
-      setEditingText(node.text);
-      setCursorPosition(node.text.length);
-      setCursorVisible(true);
-    }
-  }, [node.isEditing, node.text]);
-
-  // カーソル点滅エフェクト
-  useEffect(() => {
-    if (!node.isEditing) return;
-
-    const interval = setInterval(() => {
-      setCursorVisible(prev => !prev);
-    }, 530); // 標準的な点滅間隔
-
-    return () => clearInterval(interval);
-  }, [node.isEditing]);
-
-  // 接続状態が変わったらアクティブな接続点をクリア
+  }, [clickTimeout, node.id, canvasState.hoveredConnectionPoint, canvasState.activeConnectionPoint, setHoveredConnectionPoint, setActiveConnectionPoint]);
+  
+  // Reset active connection point when connection state changes
   useEffect(() => {
     if (!canvasState.isConnecting) {
-      setActiveConnectionPoint(null);
+      setActiveConnectionPoint(undefined);
     }
-  }, [canvasState.isConnecting]);
-
-  // 接続編集状態が変わったらホバー状態をクリア
-  useEffect(() => {
-    if (!canvasState.isEditingConnection) {
-      setHoveredConnectionPoint(null);
-      setActiveConnectionPoint(null);
-    }
-  }, [canvasState.isEditingConnection]);
-
-  // 接続完了時にもホバー状態をクリア
-  useEffect(() => {
-    if (!canvasState.isConnecting) {
-      setHoveredConnectionPoint(null);
-    }
-  }, [canvasState.isConnecting]);
-
-  // キー入力時にカーソルを表示状態にリセット + ノードサイズ更新
-  useEffect(() => {
-    if (node.isEditing) {
-      setCursorVisible(true);
-      
-      // リアルタイムでノードサイズを更新
-      updateNodeSizeForText(editingText);
-    }
-  }, [cursorPosition, editingText]);
-
-  // テキストに応じてノードサイズを計算・更新
-  const updateNodeSizeForText = (text: string) => {
-    const lineHeight = 20;
-    const padding = 16;
-    const minWidth = 120;
-    const maxWidth = 300;
-    const minHeight = 60;
-    const charWidth = 8; // 1文字あたりの概算幅
-    
-    // 手動改行による行分割
-    const manualLines = text.split('\n');
-    
-    // 各手動改行行について、自動折り返しを考慮した実際の行数を計算
-    let totalDisplayLines = 0;
-    let maxRequiredWidth = minWidth;
-    
-    for (const line of manualLines) {
-      if (line.length === 0) {
-        // 空行も1行としてカウント
-        totalDisplayLines += 1;
-        continue;
-      }
-      
-      // この行に必要な幅を計算
-      const lineRequiredWidth = line.length * charWidth + padding;
-      maxRequiredWidth = Math.max(maxRequiredWidth, Math.min(maxWidth, lineRequiredWidth));
-      
-      // 現在の幅での折り返し行数を計算
-      const availableWidth = Math.min(maxWidth, Math.max(minWidth, lineRequiredWidth)) - padding;
-      const charsPerLine = Math.floor(availableWidth / charWidth);
-      const wrappedLines = Math.ceil(line.length / charsPerLine) || 1;
-      
-      totalDisplayLines += wrappedLines;
-    }
-    
-    // 最終的な幅と高さを決定
-    const finalWidth = Math.max(minWidth, Math.min(maxWidth, maxRequiredWidth));
-    const finalHeight = Math.max(minHeight, totalDisplayLines * lineHeight + padding);
-    
-    // ノードサイズを更新（編集中のみ）
-    updateNode(node.id, {
-      size: {
-        width: finalWidth,
-        height: finalHeight,
-      }
-    });
-  };
-
-  // カーソル付きテキストを生成
-  const getDisplayTextWithCursor = () => {
-    const text = editingText;
-    const pos = cursorPosition;
-    // カーソルが見える時のみ '|' を挿入
-    const cursor = cursorVisible ? '|' : '';
-    return text.slice(0, pos) + cursor + text.slice(pos);
-  };
-
+  }, [canvasState.isConnecting, setActiveConnectionPoint]);
 
   // Generate connection points if they don't exist
   const getConnectionPoints = (): ConnectionPoint[] => {
@@ -485,21 +132,26 @@ export const NodeComponent: React.FC<NodeComponentProps> = ({ node }) => {
   // Connection point event handlers
   const handleConnectionPointMouseEnter = (pointId: string) => {
     setHoveredConnectionPoint(pointId);
+    
+    // During connection endpoint editing, show potential target
+    if (canvasState.isEditingConnection) {
+      console.log('🎯 Hovering over potential connection target:', pointId);
+    }
   };
 
   const handleConnectionPointMouseLeave = () => {
-    setHoveredConnectionPoint(null);
+    setHoveredConnectionPoint(undefined);
   };
 
-  const getAbsoluteConnectionPointPosition = (pointId: string): Position => {
-    const connectionPoint = connectionPoints.find(p => p.id === pointId);
-    if (!connectionPoint) return { x: 0, y: 0 };
+  // Connection point position calculation
+  const getAbsoluteConnectionPointPosition = (pointId: string): { x: number; y: number } => {
+    const point = connectionPoints.find(p => p.id === pointId);
+    if (!point) return { x: 0, y: 0 };
     
-    const { position } = connectionPoint;
     const { width, height } = node.size;
-    
     let localPos = { x: 0, y: 0 };
-    switch (position) {
+    
+    switch (point.position) {
       case 'top':
         localPos = { x: width / 2, y: 0 };
         break;
@@ -514,8 +166,6 @@ export const NodeComponent: React.FC<NodeComponentProps> = ({ node }) => {
         break;
     }
     
-    // Group already has x={node.position.x} y={node.position.y}, 
-    // so we need to add them to get absolute position
     return {
       x: node.position.x + localPos.x,
       y: node.position.y + localPos.y,
@@ -526,8 +176,14 @@ export const NodeComponent: React.FC<NodeComponentProps> = ({ node }) => {
     e.cancelBubble = true;
     setActiveConnectionPoint(pointId);
     
-    const absolutePosition = getAbsoluteConnectionPointPosition(pointId);
-    startConnection(pointId, absolutePosition);
+    // Don't start new connection if we're in editing mode
+    if (!canvasState.isEditingConnection) {
+      console.log('🔗 Starting new connection from:', pointId);
+      const absolutePosition = getAbsoluteConnectionPointPosition(pointId);
+      useMindmapStore.getState().startConnection(pointId, absolutePosition);
+    } else {
+      console.log('🔧 In editing mode, not starting new connection');
+    }
   };
 
   const handleConnectionPointMouseUp = (pointId: string, e: any) => {
@@ -536,64 +192,151 @@ export const NodeComponent: React.FC<NodeComponentProps> = ({ node }) => {
     // Get current canvas state
     const canvasState = useMindmapStore.getState().canvas;
     
-    // Handle connection editing mode
-    if (canvasState.isEditingConnection && canvasState.editingConnectionId) {
-      console.log('Connection editing mode: updating connection endpoint');
-      updateConnectionEndpoint(canvasState.editingConnectionId, node.id);
-      setActiveConnectionPoint(null);
+    // Handle connection endpoint editing
+    if (canvasState.isEditingConnection) {
+      console.log('🔧 Connection endpoint editing - dropping on point:', pointId);
+      const targetNodeId = pointId.split('-').slice(0, -1).join('-');
+      useMindmapStore.getState().updateConnectionEndpoint(canvasState.editingConnectionId!, targetNodeId);
       return;
     }
     
-    // Handle normal connection creation mode
+    // Handle connection creation
     if (canvasState.isConnecting && canvasState.connectionStartPoint !== pointId) {
-      // This is a valid drop target
-      endConnection(pointId);
+      useMindmapStore.getState().endConnection(pointId);
     } else if (canvasState.isConnecting) {
-      // Same connection point or invalid drop, cancel connection
-      endConnection();
+      useMindmapStore.getState().endConnection();
     }
     
-    // Always clear active connection point after handling
-    setActiveConnectionPoint(null);
+    setActiveConnectionPoint(undefined);
   };
 
   const handleDragStart = (e: any) => {
+    // Prevent dragging if Ctrl/Cmd is held (selection mode)
+    if (e.evt && (e.evt.ctrlKey || e.evt.metaKey)) {
+      e.target.stopDrag();
+      return;
+    }
+    
+    // Additional check for drag allowed state
+    if (!isDragAllowed) {
+      console.log('🚫 Drag not allowed - in multi-select mode');
+      e.target.stopDrag();
+      return;
+    }
+    
     // Prevent stage from dragging when dragging nodes
     const stage = e.target.getStage();
     stage.draggable(false);
+    
+    // Store initial position for multiple node dragging
+    setDragStartPosition({ x: node.position.x, y: node.position.y });
+    
+    // If multiple nodes are selected, store their initial positions
+    if (selectedNodeIds.size > 1 && node.isSelected) {
+      const nodes = useMindmapStore.getState().nodes;
+      const initialPositions = new Map<string, {x: number, y: number}>();
+      
+      selectedNodeIds.forEach(id => {
+        if (id !== node.id) {
+          const otherNode = nodes.find(n => n.id === id);
+          if (otherNode) {
+            initialPositions.set(id, { x: otherNode.position.x, y: otherNode.position.y });
+          }
+        }
+      });
+      
+      setOtherNodesStartPositions(initialPositions);
+    }
+  };
+
+  const handleDragMove = (e: any) => {
+    // If multiple nodes are selected
+    if (selectedNodeIds.size > 1 && node.isSelected && dragStartPosition && otherNodesStartPositions.size > 0) {
+      const position = e.target.position();
+      const deltaX = position.x - dragStartPosition.x;
+      const deltaY = position.y - dragStartPosition.y;
+      
+      // Update all selected nodes' positions based on their initial positions
+      otherNodesStartPositions.forEach((startPos, id) => {
+        updateNode(id, {
+          position: {
+            x: startPos.x + deltaX,
+            y: startPos.y + deltaY,
+          }
+        }, false); // false = don't save to history yet
+      });
+    }
   };
 
   const handleDragEnd = (e: any) => {
-    // Re-enable stage dragging
     const stage = e.target.getStage();
-    stage.draggable(true);
+    stage.draggable(false);
     
-    // Get the actual position
     const position = e.target.position();
     
-    // Update node position and save to history (for undo/redo)
-    updateNode(node.id, {
-      position: {
-        x: position.x,
-        y: position.y,
-      },
-    }, true); // true = save to history
+    // If multiple nodes were dragged
+    if (selectedNodeIds.size > 1 && node.isSelected && dragStartPosition && otherNodesStartPositions.size > 0) {
+      const deltaX = position.x - dragStartPosition.x;
+      const deltaY = position.y - dragStartPosition.y;
+      
+      // Final update for all nodes
+      const updates: Array<{id: string, position: {x: number, y: number}}> = [];
+      
+      updates.push({
+        id: node.id,
+        position: { x: position.x, y: position.y }
+      });
+      
+      otherNodesStartPositions.forEach((startPos, id) => {
+        updates.push({
+          id,
+          position: {
+            x: startPos.x + deltaX,
+            y: startPos.y + deltaY,
+          }
+        });
+      });
+      
+      // Update all nodes and save to history
+      updates.forEach(({ id, position }) => {
+        updateNode(id, { position }, id === node.id);
+      });
+      
+      // Save history once for the entire operation
+      useMindmapStore.getState().saveSnapshot();
+    } else {
+      // Single node update
+      updateNode(node.id, {
+        position: {
+          x: position.x,
+          y: position.y,
+        },
+      }, true);
+    }
+    
+    // Clear drag start positions
+    setDragStartPosition(null);
+    setOtherNodesStartPositions(new Map());
   };
 
   // Visual style based on state
-  const fillColor = node.isSelected ? '#007bff' : '#ffffff';
-  const strokeColor = node.isSelected ? '#0056b3' : '#dee2e6';
-  const strokeWidth = node.isSelected ? 2 : 1;
+  const fillColor = node.isEditing ? '#007bff' : (node.isSelected ? '#17a2b8' : '#ffffff');
+  const strokeColor = node.isEditing ? '#0056b3' : (node.isSelected ? '#138496' : '#dee2e6');
+  const strokeWidth = (node.isEditing || node.isSelected) ? 2 : 1;
+  const textColor = node.isEditing ? '#ffffff' : (node.isSelected ? '#ffffff' : '#212529');
 
   return (
     <Group
       x={node.position.x}
       y={node.position.y}
-      draggable={!node.isEditing} // Disable dragging while editing
+      draggable={!node.isEditing && isDragAllowed}
       onClick={handleClick}
       onTap={handleClick}
+      onDoubleClick={handleDoubleClick}
       onDragStart={handleDragStart}
+      onDragMove={handleDragMove}
       onDragEnd={handleDragEnd}
+      listening={true}
     >
       {/* Node background */}
       <Rect
@@ -603,103 +346,65 @@ export const NodeComponent: React.FC<NodeComponentProps> = ({ node }) => {
         stroke={strokeColor}
         strokeWidth={strokeWidth}
         cornerRadius={8}
-        shadowBlur={node.isSelected ? 10 : 5}
+        shadowBlur={node.isEditing ? 12 : (node.isSelected ? 8 : 5)}
         shadowColor="rgba(0, 0, 0, 0.2)"
         shadowOffsetY={2}
       />
       
-      {/* Node text - with cursor when editing */}
+      {/* Node text */}
       <Text
-        text={node.isEditing ? getDisplayTextWithCursor() : node.text}
+        text={node.text}
         x={8}
         y={8}
         width={node.size.width - 16}
         fontSize={14}
         fontFamily="Arial, sans-serif"
-        fill={node.isSelected ? '#ffffff' : '#212529'}
+        fill={textColor}
         align="center"
         lineHeight={1.4}
         wrap="word"
         verticalAlign="middle"
       />
       
-      {/* Direct Konva text editing - no overlay needed */}
-      
-      {/* Connection points (background layer) - always shown when not editing */}
-      {!node.isEditing && (() => {
+      {/* Connection points - hide when editing */}
+      {!node.isEditing && connectionPoints.map(point => {
         const store = useMindmapStore.getState();
         
-        // During connection editing, hide connection points on nodes that are part of the edited connection
+        // Hide if this node is part of the edited connection
         if (canvasState.isEditingConnection && canvasState.editingConnectionId) {
           const editingConnection = store.connections.find(c => c.id === canvasState.editingConnectionId);
-          // Hide connection points if this node is the source or target of the edited connection
           if (editingConnection && (editingConnection.from === node.id || editingConnection.to === node.id)) {
-            return false;
+            return null;
           }
         }
         
-        // Also hide connection points when any connection involving this node is selected
-        // This prevents connection points from overlapping with connection handles
+        // Hide if any connection involving this node is selected
         if (store.selectedConnectionId) {
           const selectedConnection = store.connections.find(c => c.id === store.selectedConnectionId);
           if (selectedConnection && (selectedConnection.from === node.id || selectedConnection.to === node.id)) {
-            return false;
+            return null;
           }
         }
         
-        return true;
-      })() && connectionPoints.map((point) => (
-        <ConnectionPointComponent
-          key={`bg-${point.id}`}
-          connectionPoint={{
-            ...point,
-            isHovered: hoveredConnectionPoint === point.id,
-            isActive: activeConnectionPoint === point.id,
-          }}
-          nodeSize={node.size}
-          onMouseEnter={() => handleConnectionPointMouseEnter(point.id)}
-          onMouseLeave={() => handleConnectionPointMouseLeave()}
-          onMouseDown={(e) => handleConnectionPointMouseDown(point.id, e)}
-          onMouseUp={(e) => handleConnectionPointMouseUp(point.id, e)}
-        />
-      ))}
-
-      {/* Editing hint - shown when editing */}
-      {node.isEditing && (
-        <Group>
-          {/* Hint text - no background box */}
-          <Text
-            text="Ctrl+Enter: 保存 | Esc: キャンセル | 外クリック: 自動保存"
-            x={8}
-            y={node.size.height + 12}
-            fontSize={10}
-            fontFamily="Arial, sans-serif"
-            fill="#6c757d"
-            align="left"
+        // Hide during active connection
+        if (canvasState.isConnecting && canvasState.connectionStartPoint?.includes(node.id)) {
+          return null;
+        }
+        
+        return (
+          <ConnectionPointComponent
+            key={point.id}
+            connectionPoint={point}
+            nodeSize={node.size}
+            isHovered={canvasState.hoveredConnectionPoint === point.id}
+            isActive={canvasState.activeConnectionPoint === point.id}
+            onMouseEnter={() => handleConnectionPointMouseEnter(point.id)}
+            onMouseLeave={handleConnectionPointMouseLeave}
+            onMouseDown={(e: any) => handleConnectionPointMouseDown(point.id, e)}
+            onMouseUp={(e: any) => handleConnectionPointMouseUp(point.id, e)}
           />
-        </Group>
-      )}
-
-      {/* Connection points (top layer) - shown during node editing or connection editing mode */}
-      {(node.isEditing || (canvasState.isEditingConnection && (() => {
-        const store = useMindmapStore.getState();
-        const editingConnection = store.connections.find(c => c.id === canvasState.editingConnectionId);
-        return editingConnection && (editingConnection.from !== node.id && editingConnection.to !== node.id);
-      })())) && connectionPoints.map((point) => (
-        <ConnectionPointComponent
-          key={`top-${point.id}`}
-          connectionPoint={{
-            ...point,
-            isHovered: hoveredConnectionPoint === point.id,
-            isActive: activeConnectionPoint === point.id,
-          }}
-          nodeSize={node.size}
-          onMouseEnter={() => handleConnectionPointMouseEnter(point.id)}
-          onMouseLeave={() => handleConnectionPointMouseLeave()}
-          onMouseDown={(e) => handleConnectionPointMouseDown(point.id, e)}
-          onMouseUp={(e) => handleConnectionPointMouseUp(point.id, e)}
-        />
-      ))}
+        );
+      })}
     </Group>
   );
 };

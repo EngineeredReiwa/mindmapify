@@ -20,6 +20,20 @@ export class MermaidGenerator {
    * Generate complete Mermaid flowchart code with logical relationships
    */
   generateFlowchartCode(): string {
+    return this.generateFlowchartCodeInternal(false);
+  }
+
+  /**
+   * Generate structured Mermaid flowchart code optimized for LLM analysis
+   */
+  generateStructuredFlowchartCode(): string {
+    return this.generateFlowchartCodeInternal(true);
+  }
+
+  /**
+   * Internal method to generate flowchart code with optional structuring
+   */
+  private generateFlowchartCodeInternal(structured: boolean): string {
     const header = `%% 本図は「事象間の論理関係」を示すための**簡易ラベル集**です。
 %% 矢印は「因果・階層・並列」の三軸に整理し、流れは矢印の向きで示します。具体的な関係は直感的に読める8ラベルのみを採用しています。
 %% 1. 因果（前->後）
@@ -50,6 +64,11 @@ export class MermaidGenerator {
       return header + `flowchart TD\n    ${nodeId}[${this.cleanText(node.text)}]`;
     }
 
+    if (structured && this.connections.length > 0) {
+      return this.generateStructuredCode(header);
+    }
+
+    // Default flat structure
     let code = header + 'flowchart TD\n';
     
     // Add all nodes
@@ -240,17 +259,266 @@ export class MermaidGenerator {
   }
 
   /**
+   * Generate structured Mermaid code optimized for LLM analysis
+   * Finds the longest chain and organizes other nodes as branches
+   */
+  private generateStructuredCode(header: string): string {
+    // Find the main chain in the graph using semantic analysis
+    const mainChain = this.findMainChain();
+    
+    if (mainChain.length === 0) {
+      // Fallback to flat structure if no path found
+      return this.generateFlowchartCodeInternal(false);
+    }
+
+    let code = header + 'flowchart TD\n';
+    
+    // Build the main chain first
+    const pathNodeIds = new Set(mainChain.map(node => node.id));
+    
+    // Add main chain nodes
+    mainChain.forEach(node => {
+      const nodeId = this.getNodeId(node.id);
+      const nodeText = this.cleanText(node.text);
+      code += `    ${nodeId}[${nodeText}]  %% Main Chain\n`;
+    });
+    
+    // Add main chain connections
+    for (let i = 0; i < mainChain.length - 1; i++) {
+      const fromId = this.getNodeId(mainChain[i].id);
+      const toId = this.getNodeId(mainChain[i + 1].id);
+      
+      // Find the connection between these nodes to get the label
+      const connection = this.connections.find(conn => 
+        (conn.from === mainChain[i].id && conn.to === mainChain[i + 1].id) ||
+        (conn.from === mainChain[i + 1].id && conn.to === mainChain[i].id)
+      );
+      
+      if (connection && connection.label) {
+        code += `    ${fromId} -->|${connection.label}| ${toId}  %% Main Flow\n`;
+      } else {
+        code += `    ${fromId} --> ${toId}  %% Main Flow\n`;
+      }
+    }
+    
+    code += '\n    %% Branch Nodes\n';
+    
+    // Add branch nodes (nodes not in main chain)
+    const branchNodes = this.nodes.filter(node => !pathNodeIds.has(node.id));
+    branchNodes.forEach(node => {
+      const nodeId = this.getNodeId(node.id);
+      const nodeText = this.cleanText(node.text);
+      code += `    ${nodeId}[${nodeText}]  %% Branch\n`;
+    });
+    
+    if (branchNodes.length > 0) {
+      code += '\n    %% Branch Connections\n';
+    }
+    
+    // Add branch connections (connections involving branch nodes)
+    this.connections.forEach(connection => {
+      const fromInPath = pathNodeIds.has(connection.from);
+      const toInPath = pathNodeIds.has(connection.to);
+      
+      // Skip connections that are already part of the main chain
+      const isMainChainConnection = fromInPath && toInPath && 
+        this.isConsecutiveInPath(connection.from, connection.to, mainChain);
+      
+      if (!isMainChainConnection) {
+        const fromId = this.getNodeId(connection.from);
+        const toId = this.getNodeId(connection.to);
+        
+        const comment = fromInPath || toInPath ? ' %% Branch Connection' : ' %% Sub-branch';
+        
+        if (connection.label) {
+          code += `    ${fromId} -->|${connection.label}| ${toId}${comment}\n`;
+        } else {
+          code += `    ${fromId} --> ${toId}${comment}\n`;
+        }
+      }
+    });
+    
+    return code;
+  }
+
+  /**
+   * Find the main chain in the connection graph using semantic analysis
+   */
+  private findMainChain(): Node[] {
+    if (this.nodes.length === 0) return [];
+    if (this.connections.length === 0) return [this.nodes[0]];
+    
+    // 1. Try semantic analysis first (number-based sequencing)
+    const semanticChain = this.findSemanticMainChain();
+    if (semanticChain.length > 1) {
+      console.log('🧠 LLM: Using semantic main chain:', semanticChain.map(n => n.text));
+      return semanticChain;
+    }
+    
+    // 2. Fallback to traditional longest path if semantic analysis fails
+    console.log('🧠 LLM: Semantic analysis failed, using longest path fallback');
+    return this.findLongestPathFallback();
+  }
+
+  /**
+   * Find main chain using semantic analysis (number-based sequencing)
+   */
+  private findSemanticMainChain(): Node[] {
+    // Extract numbers from node texts and create numbered nodes
+    const numberedNodes = this.nodes
+      .map(node => ({ node, number: this.extractNumber(node.text) }))
+      .filter((item): item is { node: Node; number: number } => item.number !== null)
+      .sort((a, b) => a.number - b.number);
+    
+    console.log('🧠 LLM: Numbered nodes:', numberedNodes.map(n => ({ text: n.node.text, number: n.number })));
+    
+    if (numberedNodes.length < 2) {
+      return []; // Not enough numbered nodes for semantic analysis
+    }
+    
+    // Find the longest consecutive sequence
+    return this.findConsecutiveChain(numberedNodes);
+  }
+
+  /**
+   * Extract number from node text for semantic analysis
+   */
+  private extractNumber(text: string): number | null {
+    // Match patterns like "1", "2", "3", etc. at the beginning
+    const match = text.match(/^(\d+)(?:\D|$)/);
+    return match ? parseInt(match[1]) : null;
+  }
+
+  /**
+   * Find consecutive chain from numbered nodes
+   */
+  private findConsecutiveChain(numberedNodes: Array<{node: Node, number: number}>): Node[] {
+    let longestChain: Node[] = [];
+    let currentChain: Node[] = [];
+    
+    for (let i = 0; i < numberedNodes.length; i++) {
+      const current = numberedNodes[i];
+      
+      // Check if this node is connected to form a valid chain
+      if (currentChain.length === 0) {
+        currentChain = [current.node];
+      } else {
+        const lastNode = currentChain[currentChain.length - 1];
+        const isConnected = this.areNodesConnected(lastNode, current.node);
+        const isConsecutive = current.number === ((numberedNodes[i-1]?.number ?? 0) + 1);
+        
+        if (isConnected && isConsecutive) {
+          currentChain.push(current.node);
+        } else {
+          // Chain broken, check if current chain is longest
+          if (currentChain.length > longestChain.length) {
+            longestChain = [...currentChain];
+          }
+          currentChain = [current.node];
+        }
+      }
+    }
+    
+    // Check final chain
+    if (currentChain.length > longestChain.length) {
+      longestChain = [...currentChain];
+    }
+    
+    console.log('🧠 LLM: Found consecutive chain:', longestChain.map(n => n.text));
+    return longestChain;
+  }
+
+  /**
+   * Check if two nodes are directly connected
+   */
+  private areNodesConnected(node1: Node, node2: Node): boolean {
+    return this.connections.some(conn => 
+      (conn.from === node1.id && conn.to === node2.id) ||
+      (conn.from === node2.id && conn.to === node1.id)
+    );
+  }
+
+  /**
+   * Fallback to traditional longest path algorithm
+   */
+  private findLongestPathFallback(): Node[] {
+    let longestPath: Node[] = [];
+    
+    // Try starting from each node to find the longest path
+    for (const startNode of this.nodes) {
+      const path = this.findLongestPathFromNode(startNode, new Set());
+      if (path.length > longestPath.length) {
+        longestPath = path;
+      }
+    }
+    
+    return longestPath;
+  }
+
+  /**
+   * Find the longest path starting from a specific node using DFS
+   */
+  private findLongestPathFromNode(startNode: Node, visited: Set<string>): Node[] {
+    visited.add(startNode.id);
+    
+    // Find all connected nodes that haven't been visited
+    const connectedNodeIds = this.connections
+      .filter(conn => 
+        (conn.from === startNode.id || conn.to === startNode.id) && 
+        !visited.has(conn.from === startNode.id ? conn.to : conn.from)
+      )
+      .map(conn => conn.from === startNode.id ? conn.to : conn.from);
+    
+    if (connectedNodeIds.length === 0) {
+      visited.delete(startNode.id);
+      return [startNode];
+    }
+    
+    let longestSubPath: Node[] = [];
+    
+    // Try each connected node recursively
+    for (const nodeId of connectedNodeIds) {
+      const node = this.nodes.find(n => n.id === nodeId);
+      if (node) {
+        const subPath = this.findLongestPathFromNode(node, visited);
+        if (subPath.length > longestSubPath.length) {
+          longestSubPath = subPath;
+        }
+      }
+    }
+    
+    visited.delete(startNode.id);
+    return [startNode, ...longestSubPath];
+  }
+
+  /**
+   * Check if two nodes are consecutive in the given path
+   */
+  private isConsecutiveInPath(nodeId1: string, nodeId2: string, path: Node[]): boolean {
+    for (let i = 0; i < path.length - 1; i++) {
+      if ((path[i].id === nodeId1 && path[i + 1].id === nodeId2) ||
+          (path[i].id === nodeId2 && path[i + 1].id === nodeId1)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
    * Get structure analysis for debugging
    */
   getAnalysis() {
     const rootNode = this.findRootNode();
     const hierarchy = this.buildHierarchy(rootNode);
+    const mainChain = this.findMainChain();
     
     return {
       totalNodes: this.nodes.length,
       totalConnections: this.connections.length,
       rootNode: rootNode.text,
       maxDepth: this.calculateMaxDepth(hierarchy),
+      mainChainLength: mainChain.length,
+      mainChain: mainChain.map(node => node.text),
       structure: hierarchy
     };
   }

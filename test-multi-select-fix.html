@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>マルチセレクトドラッグ防止テスト</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f5f5f5;
+            border-radius: 8px;
+        }
+        .test-steps {
+            background: white;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .expected {
+            background: #e8f5e9;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .issue {
+            background: #ffebee;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        code {
+            background: #f0f0f0;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 マルチセレクトドラッグ防止機能のテスト手順</h1>
+    
+    <div class="test-section">
+        <h2>📋 問題の説明</h2>
+        <div class="issue">
+            <strong>問題:</strong> Ctrl/Cmd+クリックで複数選択した直後にマウスを動かすと、意図せずドラッグが開始されてしまう
+        </div>
+        <div class="expected">
+            <strong>期待動作:</strong> 複数選択後はマウスを動かしてもドラッグが開始されず、明示的にドラッグ操作（マウスダウン→移動）した時のみドラッグが開始される
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>🔧 実装した修正内容</h2>
+        <ol>
+            <li><code>isDragAllowed</code>ステートを追加</li>
+            <li>Ctrl/Cmd+クリック時に300ms間ドラッグを無効化</li>
+            <li><code>draggable</code>プロパティを<code>isDragAllowed</code>と連動</li>
+        </ol>
+    </div>
+
+    <div class="test-section">
+        <h2>✅ テスト手順</h2>
+        
+        <div class="test-steps">
+            <h3>テスト1: 通常のドラッグ操作</h3>
+            <ol>
+                <li>アプリケーションを開く（<a href="http://localhost:5173" target="_blank">http://localhost:5173</a>）</li>
+                <li>ツールバーの「Add Node」ボタンをクリックして2つのノードを作成</li>
+                <li>ノードを1つクリックで選択</li>
+                <li>そのノードをドラッグして移動</li>
+            </ol>
+            <p><strong>期待結果:</strong> ノードが正常にドラッグできる</p>
+        </div>
+
+        <div class="test-steps">
+            <h3>テスト2: 複数選択直後のドラッグ防止</h3>
+            <ol>
+                <li>1つ目のノードをクリックで選択</li>
+                <li>Ctrl/Cmd+クリックで2つ目のノードを選択</li>
+                <li><strong>すぐに</strong>マウスを動かす（クリックを離した直後）</li>
+            </ol>
+            <p><strong>期待結果:</strong> マウスを動かしてもノードがドラッグされない</p>
+        </div>
+
+        <div class="test-steps">
+            <h3>テスト3: 300ms後のドラッグ許可</h3>
+            <ol>
+                <li>複数選択の状態から</li>
+                <li>約0.5秒待つ</li>
+                <li>ノードの上でマウスダウン→ドラッグ</li>
+            </ol>
+            <p><strong>期待結果:</strong> ノードが正常にドラッグできる</p>
+        </div>
+
+        <div class="test-steps">
+            <h3>テスト4: 複数ノードの同時ドラッグ</h3>
+            <ol>
+                <li>Ctrl/Cmd+Aで全てのノードを選択</li>
+                <li>0.5秒待つ</li>
+                <li>いずれかのノードをドラッグ</li>
+            </ol>
+            <p><strong>期待結果:</strong> 選択された全てのノードが一緒に移動する</p>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>🐛 デバッグ情報</h2>
+        <p>コンソールに以下のメッセージが表示される場合:</p>
+        <ul>
+            <li><code>🚫 Drag not allowed - in multi-select mode</code> - 複数選択モード中のドラッグ防止が動作</li>
+            <li><code>🚫 Preventing drag - only XXXms since multi-select</code> - タイムアウト期間中のドラッグ防止</li>
+        </ul>
+    </div>
+
+    <div class="test-section">
+        <h2>📝 確認項目チェックリスト</h2>
+        <label><input type="checkbox"> 通常の単一ノードドラッグが動作する</label><br>
+        <label><input type="checkbox"> Ctrl/Cmd+クリック直後のマウス移動でドラッグが開始しない</label><br>
+        <label><input type="checkbox"> 300ms後にドラッグが可能になる</label><br>
+        <label><input type="checkbox"> 複数選択したノードが一緒に移動する</label><br>
+        <label><input type="checkbox"> ドラッグ中にCtrl/Cmdキーを押してもドラッグが継続する</label>
+    </div>
+
+    <script>
+        // ページロード時にローカルストレージから状態を復元
+        window.addEventListener('load', () => {
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach((checkbox, index) => {
+                const saved = localStorage.getItem(`test-check-${index}`);
+                if (saved === 'true') {
+                    checkbox.checked = true;
+                }
+                
+                checkbox.addEventListener('change', (e) => {
+                    localStorage.setItem(`test-check-${index}`, e.target.checked);
+                });
+            });
+        });
+    </script>
+</body>
+</html>

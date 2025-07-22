@@ -1,208 +1,82 @@
 # Mindmapify デプロイメントガイド
 
-本ガイドでは、MindmapifyをVercelにデプロイする手順を説明します。
+> ✅ **現在のステータス**: 本プロジェクトは既にVercelにデプロイ済みです  
+> 🌐 **Live URL**: https://mindmapify-git-main-keisuke-kakudas-projects.vercel.app
 
-## 🚀 Vercelデプロイ手順
+## 🚀 現在の設定
 
-### 前提条件
-- [x] GitHubリポジトリにプッシュ済み
-- [x] プロジェクトがビルド可能（`npm run build`が成功する）
-- [ ] Vercelアカウント作成
+### デプロイ済み環境
+- **プラットフォーム**: Vercel
+- **フレームワーク**: Vite (自動検出)
+- **ビルドコマンド**: `npm run build`
+- **出力ディレクトリ**: `dist`
+- **自動デプロイ**: `main`ブランチへのpush時
 
-### Step 1: Vercelアカウント作成・ログイン
+### アクセス情報
+- **本番URL**: https://mindmapify-git-main-keisuke-kakudas-projects.vercel.app
+- **デプロイ管理**: [Vercelダッシュボード](https://vercel.com/dashboard)
 
-1. [Vercel](https://vercel.com/)にアクセス
-2. 「Sign Up」をクリック
-3. **GitHubアカウントでログイン**を選択（推奨）
-4. GitHubの認証を完了
+## 🔧 運用・メンテナンス
 
-### Step 2: プロジェクトのインポート
+### コードの更新デプロイ
+```bash
+# 変更をコミット
+git add .
+git commit -m "機能追加・修正内容"
 
-1. Vercelダッシュボードで「**Add New...**」→「**Project**」をクリック
-2. 「**Import Git Repository**」セクションで`mindmapify`リポジトリを選択
-3. 「**Import**」をクリック
-
-### Step 3: ビルド設定の確認
-
-Vercelが自動検出しますが、以下を確認：
-
-```yaml
-# 自動設定される内容
-Framework Preset: Vite
-Build Command: npm run build
-Output Directory: dist
-Install Command: npm install
+# mainブランチにプッシュ → 自動デプロイ
+git push origin main
 ```
 
-**重要**: 通常は自動設定で問題ありません。変更不要です。
-
-### Step 4: デプロイ実行
-
-1. 「**Deploy**」ボタンをクリック
-2. ビルドプロセスを待機（通常1-3分）
-3. デプロイ完了後、URLが表示される
-
-例：`https://mindmapify-xxx.vercel.app`
-
-### Step 5: デプロイ確認
-
-1. 生成されたURLにアクセス
-2. 以下の機能をテスト：
-   - [ ] ノード作成（Add Nodeボタン）
-   - [ ] ノード編集（クリックして編集）
-   - [ ] 接続線作成（ドラッグ&ドロップ）
-   - [ ] Mermaidコード生成（Copyボタン）
-   - [ ] キーボードショートカット（Cmd+Shift+A）
-
-## 🔧 デプロイ後の設定
-
-### 自動デプロイの確認
-
-- **mainブランチにプッシュ** → **自動デプロイ**が実行される
-- デプロイ履歴はVercelダッシュボードで確認可能
-
-### カスタムドメイン設定（オプション）
-
-1. Vercelプロジェクトページで「**Domains**」タブ
-2. 「**Add**」をクリック
-3. ドメイン名を入力（例：`mindmapify.example.com`）
-4. DNS設定を完了
-
-## 🛠️ トラブルシューティング
-
-### ビルドエラーが発生する場合
-
+### デプロイ前の確認事項
 ```bash
-# ローカルでビルドテスト
+# ローカルビルドテスト
 npm run build
 
-# TypeScriptエラーチェック
+# TypeScript確認
 npm run typecheck
 
-# Lintエラーチェック  
-npm run lint
+# 機能テスト
+npm run test:quick
 ```
 
-### よくあるエラー
+## ⚠️ 本番環境でのトラブルシューティング
 
-**1. TypeScriptエラー**
-```bash
-# 解決方法
-npm run typecheck
-# エラーを修正後にpush
-```
+### ビルドエラーが発生した場合
+1. **Vercelダッシュボード**でビルドログを確認
+2. **ローカル環境**で `npm run build` を実行して再現
+3. **TypeScriptエラー**を修正: `npm run typecheck`
+4. **修正後に再push**
 
-**2. 依存関係エラー**
-```bash
-# package-lock.jsonを確認
-npm ci
-npm run build
-```
+### パフォーマンスモニタリング
+- **Core Web Vitals**: Vercel Analytics で自動計測
+- **バンドルサイズ**: 現在 173KB (gzipped)
+- **ビルド時間**: 通常1-2分
 
-**3. メモリ不足エラー**
-```yaml
-# vercel.jsonに追加（必要に応じて）
-{
-  "functions": {
-    "app/api/**/*.js": {
-      "memory": 1024
-    }
-  }
-}
-```
-
-## 📊 パフォーマンス最適化
-
-### Build時間短縮
-
-```json
-// package.jsonのscriptsに追加
-{
-  "build:fast": "vite build --mode production"
-}
-```
-
-### CDN最適化
-
-Vercelは自動的に以下を提供：
-- **Global CDN**: 世界中のエッジサーバー
-- **画像最適化**: 自動WebP変換
-- **Gzip圧縮**: 自動圧縮
-- **HTTP/2**: 高速プロトコル
-
-## 🔐 セキュリティ設定
-
-### HTTPS
-- Vercelは自動的にHTTPS証明書を提供
-- カスタムドメインでも自動対応
-
-### 環境変数（必要に応じて）
-
-1. Vercelダッシュボード → 「**Settings**」 → 「**Environment Variables**」
-2. 変数を追加（例：API_URL, DB_CONNECTION等）
-3. 再デプロイで反映
-
-**注意**: Mindmapifyはフロントエンドのみなので、通常は環境変数不要
-
-## 📈 モニタリング
-
-### アクセス解析
-
-Vercelダッシュボードで確認可能：
-- **Visits**: ページビュー数
-- **Bandwidth**: データ転送量
-- **Function Invocations**: API呼び出し数（該当なし）
-
-### パフォーマンス
-
-- **Core Web Vitals**: 自動計測
-- **Lighthouse Score**: 週次レポート
-
-## 🔄 継続的デプロイ
-
-### ワークフロー
-
-```mermaid
-graph LR
-    A[コード修正] --> B[git push]
-    B --> C[Vercel自動ビルド]
-    C --> D[デプロイ完了]
-    D --> E[URL更新]
-```
-
-### ブランチ戦略
+## 🔄 ブランチ戦略
 
 - **main**: 本番環境（自動デプロイ）
-- **develop**: プレビュー環境（プレビューURL生成）
-- **feature/***: 個別プレビュー（プルリクエスト毎）
+- **feature/***: プレビューURL自動生成
+- **develop**: 統合テスト用（手動デプロイ）
 
-## 💡 ベストプラクティス
+## 💡 URL管理
 
-### デプロイ前チェックリスト
+### 現在のURL構成
+- **デフォルトURL**: `mindmapify-git-main-keisuke-kakudas-projects.vercel.app`
+- **短縮可能**: Vercelプロジェクト設定でドメイン名変更可能
 
-- [ ] `npm run build`が成功する
-- [ ] `npm run test:full`が通る
-- [ ] TypeScriptエラーがない
-- [ ] 本番ビルドでの動作確認
-- [ ] 重要な機能のマニュアルテスト
+### カスタムドメイン設定（オプション）
+1. Vercel → Project Settings → Domains
+2. 希望ドメインを追加
+3. DNS設定を完了
 
-### コスト管理
+## 📊 現在のVercel利用状況
 
-**Vercel無料プラン制限**:
-- **ビルド時間**: 月間100GB時間
-- **帯域幅**: 月間100GB
-- **関数実行**: 月間100GB時間（該当なし）
-
-Mindmapifyは軽量なので、無料プランで十分です。
-
-## 📞 サポート
-
-### 問題が発生した場合
-
-1. **Vercelダッシュボード**でログ確認
-2. **GitHub Issues**で報告
-3. **Vercelサポート**（有料プランのみ）
+**無料プラン範囲内**: 
+- ビルド時間: 1-2分/回
+- 帯域幅: 軽量アプリのため十分
+- 同時接続: 制限なし
 
 ---
 
-以上でMindmapifyのVercelデプロイが完了します。シンプルなフロントエンドアプリなので、通常は数分でデプロイできます。
+**Next Steps**: 新機能追加時は上記の「コードの更新デプロイ」手順に従ってください。

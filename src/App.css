@@ -99,6 +99,8 @@
   border-left: 1px solid #dee2e6;
   display: flex;
   flex-direction: column;
+  height: calc(100vh - 50px); /* ヘッダーの高さ（50px）を差し引く */
+  overflow: hidden;
 }
 
 .mermaid-panel {
@@ -106,6 +108,7 @@
   flex: 1;
   display: flex;
   flex-direction: column;
+  min-height: 0; /* 重要: flexboxの子要素でoverflowを機能させる */
 }
 
 .mermaid-panel h3 {
@@ -113,6 +116,55 @@
   font-size: 1rem;
   font-weight: 600;
   color: #212529;
+}
+
+/* Tab Navigation */
+.tab-navigation {
+  display: flex;
+  gap: 2px;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #6c757d;
+  transition: all 0.2s ease;
+}
+
+.tab-btn:hover:not(:disabled) {
+  color: #007bff;
+  background: #f8f9fa;
+}
+
+.tab-btn.active {
+  color: #007bff;
+  border-bottom-color: #007bff;
+  background: white;
+}
+
+.tab-btn:disabled {
+  color: #adb5bd;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Tab Description */
+.tab-description {
+  margin-top: 0.5rem;
+  text-align: center;
+}
+
+.tab-description small {
+  color: #6c757d;
+  font-style: italic;
 }
 
 .code-preview {
@@ -124,7 +176,10 @@
   margin-bottom: 1rem;
   font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
   font-size: 0.8rem;
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 200px; /* 最小高さを設定してスクロール領域を確保 */
+  max-height: none; /* 高さ制限を解除 */
 }
 
 .code-preview code {
@@ -190,8 +245,13 @@
   
   .sidebar {
     width: 100%;
-    height: 200px;
+    height: 300px; /* モバイルでのサイドバー高さを少し拡大 */
     border-left: none;
     border-top: 1px solid #dee2e6;
+    overflow-y: auto; /* モバイルでもスクロール可能に */
+  }
+  
+  .code-preview {
+    min-height: 150px; /* モバイルでの最小高さを調整 */
   }
 }

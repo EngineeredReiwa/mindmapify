@@ -287,25 +287,48 @@ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica
          cursor-pointer;
 }
 
-/* Canvas Node */
+/* Canvas Node States */
 .node {
   @apply bg-white rounded-lg shadow-elevation-1 p-3 min-w-24 min-h-12
          border border-gray-200
          transition-all duration-200 ease-in-out;
 }
 
-.node-selected {
-  @apply bg-white rounded-lg shadow-elevation-3 p-3 min-w-24 min-h-12
-         border-2 border-blue-500
+/* ノード状態別視覚設計（Phase 6実装済み） */
+
+/* 通常状態 */
+.node {
+  @apply bg-white rounded-lg shadow-elevation-1 p-3 min-w-24 min-h-12
+         border border-gray-200 text-gray-900
          transition-all duration-200 ease-in-out;
 }
 
-.node-editing {
-  @apply bg-white rounded-lg shadow-elevation-3 p-3 min-w-24 min-h-12
-         border-2 border-blue-400
-         ring-2 ring-blue-200
-         transition-all duration-200 ease-in-out;
+/* 選択モード（Ctrl+Click、複数選択時） */
+.node-selected {
+  background-color: #17a2b8;  /* 水色 */
+  border-color: #138496;      /* 濃い水色 */
+  color: #ffffff;             /* 白テキスト */
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* shadow-lg */
 }
+
+/* 編集モード（1クリック編集時） */
+.node-editing {
+  background-color: #007bff;  /* 青色 */
+  border-color: #0056b3;      /* 濃い青 */
+  color: #ffffff;             /* 白テキスト */
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); /* shadow-xl */
+}
+
+/* 状態遷移と操作方法 */
+/* 
+通常状態 → 編集モード: 1クリック（即座にテキスト編集開始）
+通常状態 → 選択モード: Ctrl+クリック（複数選択可能）
+編集モード → 通常状態: Enter/Ctrl+Enter（保存）、Esc（キャンセル）、外クリック（自動保存）
+選択モード → 通常状態: 空白クリック、Esc
+
+優先度: 編集モード > 選択モード > 通常状態
+複数ノード選択時の編集: 編集モードが個別に優先される
+*/
 ```
 
 ### Input Fields

@@ -19,7 +19,7 @@ export const Canvas: React.FC<CanvasProps> = ({ width, height, onCanvasClick }) 
   const canvasState = useCanvasState();
   const nodes = useNodes();
   const connections = useConnections();
-  const { setCanvasOffset, setCanvasZoom, setCanvasDragging, selectNode, selectConnection, deleteConnection, deleteNode, updateConnectionPreview, updateEditingPreview, endConnection, saveAndStopAllEditing, startEditingConnectionLabel, updateConnection, stopEditingConnectionLabel, startEditingConnectionEndpoint, updateConnectionEndpoint, cancelConnectionEndpointEdit, undo, redo, addNode } = useMindmapStore();
+  const { setCanvasOffset, setCanvasZoom, setCanvasDragging, selectNode, selectConnection, deleteConnection, deleteNode, deleteSelectedNodes, updateConnectionPreview, updateEditingPreview, saveAndStopAllEditing, startEditingConnectionLabel, updateConnection, stopEditingConnectionLabel, startEditingConnectionEndpoint, updateConnectionEndpoint, cancelConnectionEndpointEdit, cancelConnectionCreation, undo, redo, addNode, selectAll, startEditing, duplicateSelectedNodes, updateNode, saveSnapshot } = useMindmapStore();
 
   // Track last click time for double-click detection
   const lastClickTimeRef = useRef<number>(0);
@@ -49,9 +49,9 @@ export const Canvas: React.FC<CanvasProps> = ({ width, height, onCanvasClick }) 
     }
     
     
-    // If we're connecting, end the connection
+    // If we're connecting, cancel the connection (clicking on empty space should cancel)
     if (canvasState.isConnecting) {
-      endConnection();
+      cancelConnectionCreation();
       return;
     }
     
@@ -292,11 +292,15 @@ export const Canvas: React.FC<CanvasProps> = ({ width, height, onCanvasClick }) 
         if (isDoubleClick) {
           // Only trigger label editing if not in endpoint editing mode
           if (!canvasState.isEditingConnection) {
-            selectConnection(clickedConnection.id);
+            // Don't call selectConnection here to avoid selection conflicts during editing
             startEditingConnectionLabel(clickedConnection.id);
           }
         } else {
-          selectConnection(clickedConnection.id);
+          // Only select on single click if not currently editing a label
+          const isEditingAnyLabel = connections.some(conn => conn.isEditingLabel);
+          if (!isEditingAnyLabel) {
+            selectConnection(clickedConnection.id);
+          }
         }
         return;
       }
@@ -329,6 +333,9 @@ export const Canvas: React.FC<CanvasProps> = ({ width, height, onCanvasClick }) 
     const pointer = stage.getPointerPosition();
     
     if (pointer) {
+      // Track mouse position for instant node creation (N key)
+      lastMousePositionRef.current = { x: pointer.x, y: pointer.y };
+      
       // Convert screen coordinates to canvas coordinates
       const canvasPosition = {
         x: (pointer.x - canvasState.offset.x) / canvasState.zoom,
@@ -415,6 +422,8 @@ export const Canvas: React.FC<CanvasProps> = ({ width, height, onCanvasClick }) 
   
   // Key repeat state for zoom
   const keyRepeatRef = useRef<{key: string, timeout: NodeJS.Timeout | null}>({key: '', timeout: null});
+  // Mouse position tracking for N key instant node creation
+  const lastMousePositionRef = useRef<{x: number, y: number} | null>(null);
 
 
   // Keyboard shortcuts with multi-key support
@@ -520,7 +529,9 @@ export const Canvas: React.FC<CanvasProps> = ({ width, height, onCanvasClick }) 
             
             if (selectedNodes.length > 0 || selectedConnections.length > 0) {
               // Delete selected items
-              selectedNodes.forEach(node => deleteNode(node.id));
+              if (selectedNodes.length > 0) {
+                deleteSelectedNodes();
+              }
               selectedConnections.forEach(conn => deleteConnection(conn.id));
             }
             // If nothing is selected, do nothing (safety feature)
@@ -531,7 +542,9 @@ export const Canvas: React.FC<CanvasProps> = ({ width, height, onCanvasClick }) 
             // Command+A: Select All
             e.preventDefault();
             
-            // Select all nodes and connections - implementation moved to toolbar
+            // Select all nodes
+            const { selectAll } = useMindmapStore.getState();
+            selectAll();
             console.log('Select all shortcut triggered');
             
             keySequenceRef.current = [];
@@ -551,11 +564,11 @@ export const Canvas: React.FC<CanvasProps> = ({ width, height, onCanvasClick }) 
         } else if (e.key === 'Delete' || e.key === 'Backspace') {
           e.preventDefault();
           
-          // Check for selected node first
-          const selectedNode = nodes.find(node => node.isSelected);
-          if (selectedNode) {
-            // Delete selected node (this will also delete connected lines via store logic)
-            deleteNode(selectedNode.id);
+          // Check for selected nodes first
+          const selectedNodes = nodes.filter(node => node.isSelected);
+          if (selectedNodes.length > 0) {
+            // Delete all selected nodes
+            deleteSelectedNodes();
             return;
           }
           
@@ -566,9 +579,13 @@ export const Canvas: React.FC<CanvasProps> = ({ width, height, onCanvasClick }) 
           }
         } else if (e.key === 'Escape') {
           e.preventDefault();
-          // Cancel connection editing if active
+          // Cancel connection operations if active
           if (canvasState.isEditingConnection) {
+            // Cancel connection editing and revert to original state
             cancelConnectionEndpointEdit();
+          } else if (canvasState.isConnecting) {
+            // Cancel connection creation without creating a connection
+            cancelConnectionCreation();
           } else {
             // Clear all selections
             selectNode(undefined);
@@ -621,12 +638,526 @@ export const Canvas: React.FC<CanvasProps> = ({ width, height, onCanvasClick }) 
           keyRepeatRef.current.timeout = setTimeout(() => {
             keyRepeatRef.current.key = '';
           }, 100);
+        } else if (e.key === 'n' && !isCommandKey && !e.shiftKey && !e.altKey) {
+          e.preventDefault();
+          // N key: Instant node creation at mouse position or screen center
+          
+          // Check if any text input is currently focused
+          const activeElement = document.activeElement;
+          if (activeElement && (
+            activeElement.tagName === 'INPUT' ||
+            activeElement.tagName === 'TEXTAREA' ||
+            activeElement.hasAttribute('contenteditable')
+          )) {
+            return; // Don't interfere with text input
+          }
+          
+          // Check if any node is currently being edited
+          const isAnyNodeEditing = nodes.some(node => node.isEditing);
+          if (isAnyNodeEditing) {
+            return; // Don't create new node while editing
+          }
+          
+          // Get mouse position or use screen center
+          let targetPosition = { x: 400, y: 300 }; // Default center
+          
+          // Try to get last known mouse position from the stage
+          const stage = document.querySelector('.konvajs-content');
+          if (stage && lastMousePositionRef.current) {
+            const rect = stage.getBoundingClientRect();
+            const canvasPos = {
+              x: (lastMousePositionRef.current.x - rect.left - canvasState.offset.x) / canvasState.zoom,
+              y: (lastMousePositionRef.current.y - rect.top - canvasState.offset.y) / canvasState.zoom,
+            };
+            targetPosition = canvasPos;
+          }
+          
+          console.log('🎯 N key pressed - creating instant node at:', targetPosition);
+          addNode(targetPosition, 'New Node');
+          
+          // Start editing the new node immediately
+          setTimeout(() => {
+            const newNodeId = useMindmapStore.getState().selectedNodeId;
+            if (newNodeId) {
+              startEditing(newNodeId);
+            }
+          }, 50);
+        } else if (e.key === 'd' && !isCommandKey && !e.shiftKey && !e.altKey) {
+          e.preventDefault();
+          // D key: Duplicate selected nodes
+          
+          // Check if any text input is currently focused
+          const activeElement = document.activeElement;
+          if (activeElement && (
+            activeElement.tagName === 'INPUT' ||
+            activeElement.tagName === 'TEXTAREA' ||
+            activeElement.hasAttribute('contenteditable')
+          )) {
+            return; // Don't interfere with text input
+          }
+          
+          // Check if any node is currently being edited
+          const isAnyNodeEditing = nodes.some(node => node.isEditing);
+          if (isAnyNodeEditing) {
+            return; // Don't duplicate while editing
+          }
+          
+          // Check if any nodes are selected
+          const selectedNodes = nodes.filter(node => node.isSelected);
+          if (selectedNodes.length === 0) {
+            return; // Nothing to duplicate
+          }
+          
+          console.log('🎯 D key pressed - duplicating', selectedNodes.length, 'selected nodes');
+          duplicateSelectedNodes();
+        } else if ((e.key === 'ArrowUp' || e.key === 'ArrowDown' || e.key === 'ArrowLeft' || e.key === 'ArrowRight' || 
+                   e.key === 'h' || e.key === 'j' || e.key === 'k' || e.key === 'l') && 
+                   !isCommandKey && !e.altKey) {
+          e.preventDefault();
+          
+          // Check if we're in connection endpoint editing mode
+          if (canvasState.isEditingConnection) {
+            console.log('🎯 Arrow key in endpoint editing mode - changing connection endpoint');
+            
+            const connection = connections.find(c => c.id === canvasState.editingConnectionId);
+            if (!connection) {
+              console.log('❌ Could not find connection being edited');
+              cancelConnectionEndpointEdit();
+              return;
+            }
+            
+            // Determine direction for endpoint change
+            let targetDirection: 'up' | 'down' | 'left' | 'right' = 'right';
+            switch (e.key) {
+              case 'ArrowUp':
+              case 'k':
+                targetDirection = 'up';
+                break;
+              case 'ArrowDown':
+              case 'j':
+                targetDirection = 'down';
+                break;
+              case 'ArrowLeft':
+              case 'h':
+                targetDirection = 'left';
+                break;
+              case 'ArrowRight':
+              case 'l':
+                targetDirection = 'right';
+                break;
+            }
+            
+            // Get the current endpoint being edited
+            const isEditingStart = canvasState.editingEndpoint === 'start';
+            const currentNodeId = isEditingStart ? connection.from : connection.to;
+            const currentNode = nodes.find(n => n.id === currentNodeId);
+            
+            if (!currentNode) {
+              console.log('❌ Could not find current endpoint node');
+              cancelConnectionEndpointEdit();
+              return;
+            }
+            
+            // Find the closest node in the specified direction
+            const fromCenter = {
+              x: currentNode.position.x + currentNode.size.width / 2,
+              y: currentNode.position.y + currentNode.size.height / 2,
+            };
+            
+            let closestNode = null;
+            let closestDistance = Infinity;
+            
+            nodes.forEach(node => {
+              if (node.id === currentNodeId) return; // Skip current node
+              if (node.id === (isEditingStart ? connection.to : connection.from)) return; // Skip the other endpoint
+              
+              const toCenter = {
+                x: node.position.x + node.size.width / 2,
+                y: node.position.y + node.size.height / 2,
+              };
+              
+              // Check if node is in the correct direction
+              let isInDirection = false;
+              switch (targetDirection) {
+                case 'up':
+                  isInDirection = toCenter.y < fromCenter.y - 20;
+                  break;
+                case 'down':
+                  isInDirection = toCenter.y > fromCenter.y + 20;
+                  break;
+                case 'left':
+                  isInDirection = toCenter.x < fromCenter.x - 20;
+                  break;
+                case 'right':
+                  isInDirection = toCenter.x > fromCenter.x + 20;
+                  break;
+              }
+              
+              if (isInDirection) {
+                const distance = Math.sqrt(
+                  Math.pow(toCenter.x - fromCenter.x, 2) + 
+                  Math.pow(toCenter.y - fromCenter.y, 2)
+                );
+                
+                if (distance < closestDistance) {
+                  closestDistance = distance;
+                  closestNode = node;
+                }
+              }
+            });
+            
+            if (closestNode) {
+              console.log('🎯 Found new endpoint node in', targetDirection, 'direction:', closestNode.id);
+              // Update the connection endpoint
+              updateConnectionEndpoint(canvasState.editingConnectionId!, closestNode.id);
+            } else {
+              console.log('❌ No node found in', targetDirection, 'direction for endpoint change');
+            }
+            
+            return;
+          }
+          
+          // Check if we're in connection mode - if so, handle directional connections
+          if (canvasState.isConnecting) {
+            console.log('🎯 Arrow key in connection mode - creating directional connection');
+            
+            // Get the source node from the connection start point
+            const fromNodeId = canvasState.connectionStartPoint?.split('-').slice(0, -1).join('-');
+            const fromNode = nodes.find(n => n.id === fromNodeId);
+            
+            if (!fromNode) {
+              console.log('❌ Could not find source node for directional connection');
+              cancelConnectionCreation();
+              return;
+            }
+            
+            // Determine direction and find target node
+            let targetDirection: 'up' | 'down' | 'left' | 'right' = 'right';
+            switch (e.key) {
+              case 'ArrowUp':
+              case 'k':
+                targetDirection = 'up';
+                break;
+              case 'ArrowDown':
+              case 'j':
+                targetDirection = 'down';
+                break;
+              case 'ArrowLeft':
+              case 'h':
+                targetDirection = 'left';
+                break;
+              case 'ArrowRight':
+              case 'l':
+                targetDirection = 'right';
+                break;
+            }
+            
+            // Find the closest node in the specified direction
+            const fromCenter = {
+              x: fromNode.position.x + fromNode.size.width / 2,
+              y: fromNode.position.y + fromNode.size.height / 2,
+            };
+            
+            let closestNode = null;
+            let closestDistance = Infinity;
+            
+            nodes.forEach(node => {
+              if (node.id === fromNode.id) return; // Skip self
+              
+              const toCenter = {
+                x: node.position.x + node.size.width / 2,
+                y: node.position.y + node.size.height / 2,
+              };
+              
+              // Check if node is in the correct direction
+              let isInDirection = false;
+              switch (targetDirection) {
+                case 'up':
+                  isInDirection = toCenter.y < fromCenter.y - 20; // 20px tolerance
+                  break;
+                case 'down':
+                  isInDirection = toCenter.y > fromCenter.y + 20;
+                  break;
+                case 'left':
+                  isInDirection = toCenter.x < fromCenter.x - 20;
+                  break;
+                case 'right':
+                  isInDirection = toCenter.x > fromCenter.x + 20;
+                  break;
+              }
+              
+              if (isInDirection) {
+                const distance = Math.sqrt(
+                  Math.pow(toCenter.x - fromCenter.x, 2) + 
+                  Math.pow(toCenter.y - fromCenter.y, 2)
+                );
+                
+                if (distance < closestDistance) {
+                  closestDistance = distance;
+                  closestNode = node;
+                }
+              }
+            });
+            
+            if (closestNode) {
+              console.log('🎯 Found target node in', targetDirection, 'direction:', closestNode.id);
+              // Create connection to the closest node in that direction
+              const targetConnectionPointId = `${closestNode.id}-left`; // Default to left side
+              endConnection(targetConnectionPointId);
+            } else {
+              console.log('❌ No node found in', targetDirection, 'direction');
+              // Show visual feedback or create a new node in that direction
+              cancelConnectionCreation();
+            }
+            
+            return;
+          }
+          
+          // Arrow keys or HJKL: Fine-tune node movement (original logic)
+          
+          // Check if any text input is currently focused
+          const activeElement = document.activeElement;
+          if (activeElement && (
+            activeElement.tagName === 'INPUT' ||
+            activeElement.tagName === 'TEXTAREA' ||
+            activeElement.hasAttribute('contenteditable')
+          )) {
+            return; // Don't interfere with text input
+          }
+          
+          // Check if any node is currently being edited
+          const isAnyNodeEditing = nodes.some(node => node.isEditing);
+          if (isAnyNodeEditing) {
+            return; // Don't move while editing
+          }
+          
+          // Check if any nodes are selected
+          const selectedNodes = nodes.filter(node => node.isSelected);
+          if (selectedNodes.length === 0) {
+            return; // Nothing to move
+          }
+          
+          // Determine movement direction and distance
+          let dx = 0, dy = 0;
+          const moveDistance = e.shiftKey ? 20 : 5; // Grid movement vs fine movement
+          
+          switch (e.key) {
+            case 'ArrowUp':
+            case 'k':
+              dy = -moveDistance;
+              break;
+            case 'ArrowDown':
+            case 'j':
+              dy = moveDistance;
+              break;
+            case 'ArrowLeft':
+            case 'h':
+              dx = -moveDistance;
+              break;
+            case 'ArrowRight':
+            case 'l':
+              dx = moveDistance;
+              break;
+          }
+          
+          console.log('🎯 Moving', selectedNodes.length, 'nodes by', {dx, dy}, e.shiftKey ? '(grid)' : '(fine)');
+          
+          // Move all selected nodes
+          selectedNodes.forEach(node => {
+            const newPosition = {
+              x: Math.max(0, node.position.x + dx), // Don't go negative
+              y: Math.max(0, node.position.y + dy),
+            };
+            updateNode(node.id, { position: newPosition }, false); // Don't save history for each node
+          });
+          
+          // Save history once for the entire movement
+          saveSnapshot();
+        } else if (e.key === 'c' && !isCommandKey && !e.shiftKey && !e.altKey) {
+          e.preventDefault();
+          // C key: Connection mode - start connection from selected node
+          
+          // Check if any text input is currently focused
+          const activeElement = document.activeElement;
+          if (activeElement && (
+            activeElement.tagName === 'INPUT' ||
+            activeElement.tagName === 'TEXTAREA' ||
+            activeElement.hasAttribute('contenteditable')
+          )) {
+            return; // Don't interfere with text input
+          }
+          
+          // Check if any node is currently being edited
+          const isAnyNodeEditing = nodes.some(node => node.isEditing);
+          if (isAnyNodeEditing) {
+            return; // Don't start connection while editing
+          }
+          
+          // Check if exactly one node is selected
+          const selectedNodes = nodes.filter(node => node.isSelected);
+          if (selectedNodes.length !== 1) {
+            console.log('🎯 C key: Need exactly one selected node for connection mode');
+            return; // Need exactly one node selected
+          }
+          
+          const fromNode = selectedNodes[0];
+          console.log('🎯 C key pressed - starting connection mode from node:', fromNode.id);
+          
+          // Start connection from the center-right of the selected node
+          const connectionPointId = `${fromNode.id}-right`; // Use right side as default
+          const startPosition = {
+            x: fromNode.position.x + fromNode.size.width,
+            y: fromNode.position.y + fromNode.size.height / 2,
+          };
+          
+          // Start connection mode
+          startConnection(connectionPointId, startPosition);
+          
+          console.log('🔗 Connection mode started - drag to another node or press arrow keys for directional connection');
+        } else if (e.key >= '1' && e.key <= '8' && !isCommandKey && !e.shiftKey && !e.altKey) {
+          e.preventDefault();
+          // Number keys 1-8: Quick connection with simultaneous label setting (only in connection mode)
+          
+          if (!canvasState.isConnecting) {
+            // If not in connection mode, check if we can start connection mode
+            const selectedNodes = nodes.filter(node => node.isSelected);
+            if (selectedNodes.length !== 1) {
+              return; // Need exactly one selected node
+            }
+            
+            // Auto-start connection mode first
+            const fromNode = selectedNodes[0];
+            const connectionPointId = `${fromNode.id}-right`;
+            const startPosition = {
+              x: fromNode.position.x + fromNode.size.width,
+              y: fromNode.position.y + fromNode.size.height / 2,
+            };
+            startConnection(connectionPointId, startPosition);
+            
+            // Brief delay to let connection mode establish, then continue
+            setTimeout(() => {
+              console.log('🎯 Auto-started connection mode, now looking for target in right direction');
+              // Will continue processing the number key
+            }, 10);
+            return;
+          }
+          
+          console.log('🎯 Number key in connection mode:', e.key);
+          
+          // Get the source node from the connection start point
+          const fromNodeId = canvasState.connectionStartPoint?.split('-').slice(0, -1).join('-');
+          const fromNode = nodes.find(n => n.id === fromNodeId);
+          
+          if (!fromNode) {
+            console.log('❌ Could not find source node for labeled connection');
+            cancelConnectionCreation();
+            return;
+          }
+          
+          // Find the closest node to the right (default direction for labeled connections)
+          const fromCenter = {
+            x: fromNode.position.x + fromNode.size.width / 2,
+            y: fromNode.position.y + fromNode.size.height / 2,
+          };
+          
+          let closestNode = null;
+          let closestDistance = Infinity;
+          
+          nodes.forEach(node => {
+            if (node.id === fromNode.id) return; // Skip self
+            
+            const toCenter = {
+              x: node.position.x + node.size.width / 2,
+              y: node.position.y + node.size.height / 2,
+            };
+            
+            const distance = Math.sqrt(
+              Math.pow(toCenter.x - fromCenter.x, 2) + 
+              Math.pow(toCenter.y - fromCenter.y, 2)
+            );
+            
+            if (distance < closestDistance) {
+              closestDistance = distance;
+              closestNode = node;
+            }
+          });
+          
+          if (closestNode) {
+            const labelIndex = parseInt(e.key) - 1; // Convert 1-8 to 0-7
+            const labels = ['原因', '結果', '手段', '具体例', '要素', '同類', '対比', '補完'];
+            const selectedLabel = labels[labelIndex];
+            
+            console.log('🎯 Creating connection with label:', selectedLabel, 'to node:', closestNode.id);
+            
+            // Create connection to the closest node
+            const targetConnectionPointId = `${closestNode.id}-left`;
+            endConnection(targetConnectionPointId);
+            
+            // Add label to the newly created connection
+            // We need to find the connection that was just created and add the label
+            setTimeout(() => {
+              const state = useMindmapStore.getState();
+              const newConnection = state.connections.find(conn => 
+                (conn.from === fromNodeId && conn.to === closestNode.id) ||
+                (conn.from === closestNode.id && conn.to === fromNodeId)
+              );
+              
+              if (newConnection && !newConnection.label) {
+                console.log('🏷️ Adding label to new connection:', selectedLabel);
+                updateConnection(newConnection.id, { label: selectedLabel });
+              }
+            }, 50);
+          } else {
+            console.log('❌ No target node found for labeled connection');
+            cancelConnectionCreation();
+          }
+        } else if (e.key === 'r' && !isCommandKey && !e.shiftKey && !e.altKey) {
+          e.preventDefault();
+          // R key: Start connection endpoint editing mode
+          
+          // Check if any text input is currently focused
+          const activeElement = document.activeElement;
+          if (activeElement && (
+            activeElement.tagName === 'INPUT' ||
+            activeElement.tagName === 'TEXTAREA' ||
+            activeElement.hasAttribute('contenteditable')
+          )) {
+            return; // Don't interfere with text input
+          }
+          
+          // Check if any node is currently being edited
+          const isAnyNodeEditing = nodes.some(node => node.isEditing);
+          if (isAnyNodeEditing) {
+            return; // Don't start endpoint editing while editing text
+          }
+          
+          // Check if exactly one connection is selected
+          const selectedConnections = connections.filter(conn => conn.isSelected);
+          if (selectedConnections.length !== 1) {
+            console.log('🎯 R key: Need exactly one selected connection for endpoint editing');
+            return; // Need exactly one connection selected
+          }
+          
+          const connection = selectedConnections[0];
+          console.log('🎯 R key pressed - starting connection endpoint editing for:', connection.id);
+          
+          // Start editing the 'end' endpoint by default (can be changed with arrow keys)
+          startEditingConnectionEndpoint(connection.id, 'end');
+          
+          console.log('🔧 Endpoint editing mode started - use arrow keys to change connection endpoints');
         } else if (e.key === '?' || (e.key === '/' && e.shiftKey)) {
           e.preventDefault();
           // Show keyboard shortcuts help
           alert(
             'キーボードショートカット:\n\n' +
             '🎯 メイン操作:\n' +
+            '• N: 瞬間ノード作成 (マウス位置または画面中央)\n' +
+            '• D: 選択ノード複製 (接続も一緒に複製)\n' +
+            '• C: 選択ノードから接続開始 (矢印キーで方向指定接続)\n' +
+            '• 数字1-8: 最近接ノードへ関係ラベル付き接続 (1:原因, 2:結果, 3:手段, 4:具体例, 5:要素, 6:同類, 7:対比, 8:補完)\n' +
+            '• R: 選択接続線のエンドポイント編集モード (矢印キーでエンドポイント変更)\n' +
+            '• 矢印キー/HJKL: ノード微調整移動 (5px単位)\n' +
+            '• Shift+矢印/HJKL: グリッド整列移動 (20px単位)\n' +
             '• Cmd/Ctrl + Shift + A: 新規ノード追加 (Add Node)\n' +
             '• Cmd/Ctrl + Shift + D: 選択アイテム削除 (Delete)\n' +
             '• Cmd/Ctrl + A: 全選択 (Select All)\n\n' +
@@ -639,7 +1170,7 @@ export const Canvas: React.FC<CanvasProps> = ({ width, height, onCanvasClick }) 
             '• Cmd/Ctrl + 0: ズームリセット\n\n' +
             '⌨️ その他:\n' +
             '• Delete/Backspace: 選択アイテム削除\n' +
-            '• Escape: 選択解除/操作キャンセル\n' +
+            '• Escape: 選択解除/接続操作キャンセル\n' +
             '• ?: このヘルプを表示\n\n' +
             '💡 使い方: 全削除は Cmd+A → Cmd+Shift+D の2ステップで安全に！'
           );
@@ -675,7 +1206,7 @@ export const Canvas: React.FC<CanvasProps> = ({ width, height, onCanvasClick }) 
         clearTimeout(sequenceTimeoutRef.current);
       }
     };
-  }, [setCanvasZoom, setCanvasOffset, nodes, connections, deleteNode, deleteConnection, selectNode, selectConnection, undo, redo, canvasState.isEditingConnection, cancelConnectionEndpointEdit, addNode, updateEditingPreview]);
+  }, [setCanvasZoom, setCanvasOffset, nodes, connections, deleteNode, deleteConnection, deleteSelectedNodes, selectNode, selectConnection, undo, redo, canvasState.isEditingConnection, canvasState.isConnecting, cancelConnectionEndpointEdit, cancelConnectionCreation, addNode, updateEditingPreview]);
 
   return (
     <div className="canvas-container" style={{ width, height, overflow: 'hidden' }}>

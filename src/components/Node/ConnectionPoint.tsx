@@ -5,6 +5,8 @@ import type { ConnectionPoint } from '../../types';
 interface ConnectionPointProps {
   connectionPoint: ConnectionPoint;
   nodeSize: { width: number; height: number };
+  isHovered: boolean;
+  isActive: boolean;
   onMouseEnter: () => void;
   onMouseLeave: () => void;
   onMouseDown: (e: any) => void;
@@ -14,6 +16,8 @@ interface ConnectionPointProps {
 export const ConnectionPointComponent: React.FC<ConnectionPointProps> = ({
   connectionPoint,
   nodeSize,
+  isHovered,
+  isActive,
   onMouseEnter,
   onMouseLeave,
   onMouseDown,
@@ -39,9 +43,9 @@ export const ConnectionPointComponent: React.FC<ConnectionPointProps> = ({
   };
 
   const pos = getPosition();
-  const radius = connectionPoint.isHovered ? 8 : 6;
-  const fillColor = connectionPoint.isActive ? '#ff6b6b' : connectionPoint.isHovered ? '#4ecdc4' : '#dee2e6';
-  const strokeColor = connectionPoint.isActive ? '#e74c3c' : connectionPoint.isHovered ? '#26d0ce' : '#adb5bd';
+  const radius = isHovered ? 8 : 6;
+  const fillColor = isActive ? '#ff6b6b' : isHovered ? '#4ecdc4' : '#dee2e6';
+  const strokeColor = isActive ? '#e74c3c' : isHovered ? '#26d0ce' : '#adb5bd';
 
   return (
     <Circle
@@ -56,7 +60,7 @@ export const ConnectionPointComponent: React.FC<ConnectionPointProps> = ({
       onMouseLeave={onMouseLeave}
       onMouseDown={onMouseDown}
       onMouseUp={onMouseUp}
-      shadowBlur={connectionPoint.isHovered ? 8 : 4}
+      shadowBlur={isHovered ? 8 : 4}
       shadowColor="rgba(0, 0, 0, 0.3)"
       shadowOffsetY={2}
       // Add connection point ID for detection

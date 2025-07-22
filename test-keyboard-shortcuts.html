@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phase 7.1 キーボードショートカットテスト</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f5f5f5;
+            border-radius: 8px;
+        }
+        .test-steps {
+            background: white;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .expected {
+            background: #e8f5e9;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .hotkey {
+            background: #333;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: monospace;
+            font-weight: bold;
+        }
+        .performance {
+            background: #fff3cd;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>⚡ Phase 7.1: 高速ノード操作キーボードショートカット</h1>
+    
+    <div class="test-section">
+        <h2>🎯 実装済み機能</h2>
+        <div class="performance">
+            <strong>目標:</strong> ノード作成時間 3秒→0.5秒（6倍高速化）
+        </div>
+        <ul>
+            <li>✅ <span class="hotkey">N</span> キー: 瞬間ノード作成</li>
+            <li>✅ <span class="hotkey">D</span> キー: 選択ノード複製</li>
+            <li>🚧 HJKL/矢印キー: ノード微調整移動（実装中）</li>
+            <li>🚧 Shift+矢印: グリッド整列移動（実装中）</li>
+        </ul>
+    </div>
+
+    <div class="test-section">
+        <h2>✅ テスト手順</h2>
+        
+        <div class="test-steps">
+            <h3>テスト1: <span class="hotkey">N</span> キー瞬間ノード作成</h3>
+            <ol>
+                <li>アプリケーションを開く（<a href="http://localhost:5173" target="_blank">http://localhost:5173</a>）</li>
+                <li>キャンバス上にマウスを移動</li>
+                <li><span class="hotkey">N</span> キーを押す</li>
+                <li><strong>期待結果:</strong> マウス位置にノードが作成され、即座に編集モードになる</li>
+            </ol>
+            <div class="expected">
+                ✨ 従来のツールバークリック→位置クリック（3秒）が、Nキー一発（0.5秒）に短縮
+            </div>
+        </div>
+
+        <div class="test-steps">
+            <h3>テスト2: 画面中央でのノード作成</h3>
+            <ol>
+                <li>マウスをキャンバス外（サイドバーなど）に移動</li>
+                <li><span class="hotkey">N</span> キーを押す</li>
+                <li><strong>期待結果:</strong> 画面中央にノードが作成される</li>
+            </ol>
+        </div>
+
+        <div class="test-steps">
+            <h3>テスト3: 編集中のN キー無効化</h3>
+            <ol>
+                <li>ノードをダブルクリックして編集状態にする</li>
+                <li>テキスト編集中に<span class="hotkey">N</span> キーを押す</li>
+                <li><strong>期待結果:</strong> 「n」が入力され、新しいノードは作成されない</li>
+            </ol>
+        </div>
+
+        <div class="test-steps">
+            <h3>テスト4: <span class="hotkey">D</span> キー単一ノード複製</h3>
+            <ol>
+                <li><span class="hotkey">N</span> キーでノードを作成し、「テストノード」と入力</li>
+                <li>ノードを選択状態にする（クリック）</li>
+                <li><span class="hotkey">D</span> キーを押す</li>
+                <li><strong>期待結果:</strong> 右下にオフセットして同じノードが複製される</li>
+            </ol>
+            <div class="expected">
+                🎯 複製されたノードが自動選択され、元のノードは選択解除される
+            </div>
+        </div>
+
+        <div class="test-steps">
+            <h3>テスト5: 複数ノード複製</h3>
+            <ol>
+                <li>複数のノードを<span class="hotkey">Ctrl</span>+クリックで選択</li>
+                <li><span class="hotkey">D</span> キーを押す</li>
+                <li><strong>期待結果:</strong> 選択した全ノードが複製される</li>
+            </ol>
+        </div>
+
+        <div class="test-steps">
+            <h3>テスト6: 接続も含む複製</h3>
+            <ol>
+                <li>2つのノードを作成し、接続線で繋ぐ</li>
+                <li><span class="hotkey">Ctrl</span>+<span class="hotkey">A</span> で全選択</li>
+                <li><span class="hotkey">D</span> キーを押す</li>
+                <li><strong>期待結果:</strong> ノードと接続線の両方が複製される</li>
+            </ol>
+            <div class="expected">
+                🔗 複製されたノード間の接続も自動的に作成される
+            </div>
+        </div>
+
+        <div class="test-steps">
+            <h3>テスト7: 選択なしでのD キー無効化</h3>
+            <ol>
+                <li><span class="hotkey">Escape</span> で選択をクリア</li>
+                <li><span class="hotkey">D</span> キーを押す</li>
+                <li><strong>期待結果:</strong> 何も複製されない（安全機能）</li>
+            </ol>
+        </div>
+
+        <div class="test-steps">
+            <h3>テスト8: ヘルプ表示</h3>
+            <ol>
+                <li><span class="hotkey">?</span> キーを押す</li>
+                <li><strong>期待結果:</strong> ヘルプダイアログでN/Dキーの説明が表示される</li>
+            </ol>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>📝 確認項目チェックリスト</h2>
+        <label><input type="checkbox"> Nキーでマウス位置にノード作成</label><br>
+        <label><input type="checkbox"> 作成と同時に編集モード開始</label><br>
+        <label><input type="checkbox"> 編集中はNキー無効化</label><br>
+        <label><input type="checkbox"> Dキーで選択ノード複製</label><br>
+        <label><input type="checkbox"> 複数選択時の一括複製</label><br>
+        <label><input type="checkbox"> 接続線も含めた完全複製</label><br>
+        <label><input type="checkbox"> 選択なしでのDキー無効化</label><br>
+        <label><input type="checkbox"> ヘルプにN/D機能記載</label><br>
+        <label><input type="checkbox"> 従来操作より明らかに高速</label>
+    </div>
+
+    <div class="test-section">
+        <h2>🚀 パフォーマンス比較</h2>
+        <div class="performance">
+            <h4>従来の方法:</h4>
+            <p>ツールバークリック（1秒）→ 位置選択クリック（1秒）→ 編集開始（1秒）= <strong>3秒</strong></p>
+            
+            <h4>新しい方法:</h4>
+            <p>マウス移動（0.2秒）→ Nキー（0.1秒）→ 自動編集開始（0.2秒）= <strong>0.5秒</strong></p>
+            
+            <h4>複製の場合:</h4>
+            <p>従来: ノード選択→コピー→ペースト→位置調整 = <strong>5秒</strong><br>
+            新方式: ノード選択→Dキー = <strong>1秒</strong></p>
+        </div>
+    </div>
+
+    <script>
+        // ページロード時にローカルストレージから状態を復元
+        window.addEventListener('load', () => {
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach((checkbox, index) => {
+                const saved = localStorage.getItem(`keyboard-test-check-${index}`);
+                if (saved === 'true') {
+                    checkbox.checked = true;
+                }
+                
+                checkbox.addEventListener('change', (e) => {
+                    localStorage.setItem(`keyboard-test-check-${index}`, e.target.checked);
+                });
+            });
+        });
+    </script>
+</body>
+</html>

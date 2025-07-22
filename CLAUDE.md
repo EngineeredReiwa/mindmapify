@@ -11,7 +11,8 @@ Claude Codeでの開発に必要な設計書は以下に整理されています
 - `docs/MVP_DEFINITION.md` - MVP機能要件とタイムライン
 - `docs/USER_EXPERIENCE_DESIGN.md` - ユーザージャーニーとUI/UX設計
 - `docs/WIREFRAMES.md` - 詳細なワイヤーフレームとレイアウト設計
-- `docs/IMPLEMENTATION_ROADMAP.md` - **実装ロードマップとタスク管理**
+- `docs/IMPLEMENTATION_ROADMAP.md` - **現在進行中・今後のタスク管理**
+- `docs/IMPLEMENTATION_ARCHIVE.md` - **Phase 1-5B完了済み65タスクの履歴**
 - `docs/DESIGN_RULE.md` - **デザインシステム・実装チェックリスト**
 - `docs/TEST_GUIDE.md` - **統合テストスイート使用ガイド**
 
@@ -129,15 +130,20 @@ npm run test:full
 npm run test:workflows
 ```
 
-#### ✅ 許可事項
+#### ✅ 許可事項（推奨）
 - **test-suite.js修正・拡張**: 不足機能の追加・改善
 - **新カテゴリ追加**: TEST_CATEGORIESへの新しいテストカテゴリ追加
 - **npmスクリプト追加**: package.jsonへの新しいテストコマンド追加
+- **新機能テスト統合**: 新機能実装時はtest-suite.jsに直接統合
 
 #### ⚠️ 絶対禁止事項
 - puppeteerスクリプトの直接作成・実行（test-suite.js以外）
 - tempディレクトリ内への個別テストファイル作成
 - test-*.jsなどの散乱ファイル作成
+
+#### 📋 解決済み問題（Phase 6）
+**問題**: Claude Codeが複数選択機能のテストで個別ファイル（temp/test-multi-select-manual.cjs等）を作成
+**解決**: test-suite.jsのノード操作テストセクションに多重選択テストを統合済み
 
 ### コアコンセプト
 - 「Think freely. Export clearly.」

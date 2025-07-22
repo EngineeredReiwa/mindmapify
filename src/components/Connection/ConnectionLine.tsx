@@ -13,6 +13,9 @@ export const ConnectionLine: React.FC<ConnectionLineProps> = ({ connection }) =>
   const nodes = useMindmapStore(state => state.nodes);
   const canvasState = useMindmapStore(state => state.canvas);
   
+  // Track single click for preventing double-click conflicts
+  const [lastClickTime, setLastClickTime] = React.useState(0);
+  
   // Component rendered efficiently
 
   // Find the connected nodes
@@ -97,7 +100,17 @@ export const ConnectionLine: React.FC<ConnectionLineProps> = ({ connection }) =>
       e.evt.preventDefault();
     }
     
-    selectConnection(connection.id);
+    // Prevent single click immediately after double click
+    const currentTime = Date.now();
+    if (currentTime - lastClickTime < 500) {
+      return;
+    }
+    
+    // Only select if not currently editing a label to prevent interference
+    const isEditingLabel = connection.isEditingLabel;
+    if (!isEditingLabel) {
+      selectConnection(connection.id);
+    }
   };
 
   const handleDoubleClick = (e: any) => {
@@ -108,10 +121,17 @@ export const ConnectionLine: React.FC<ConnectionLineProps> = ({ connection }) =>
       e.evt.preventDefault();
     }
     
+    console.log('🎯 Connection double-click detected on:', connection.id);
+    setLastClickTime(Date.now()); // Record double-click time
+    
     // Only start label editing if not in connection endpoint editing mode
     if (!canvasState.isEditingConnection) {
+      // Select the connection first, then start editing
       selectConnection(connection.id);
-      startEditingConnectionLabel(connection.id);
+      // Small delay to ensure selection state updates
+      setTimeout(() => {
+        startEditingConnectionLabel(connection.id);
+      }, 50);
     }
   };
 
@@ -174,7 +194,7 @@ export const ConnectionLine: React.FC<ConnectionLineProps> = ({ connection }) =>
           endPoint.x, endPoint.y,
         ]}
         stroke="transparent"
-        strokeWidth={30} // Increased hit area for better UX
+        strokeWidth={40} // Further increased hit area for better double-click detection
         tension={0.5}
         lineCap="round"
         lineJoin="round"
@@ -185,6 +205,7 @@ export const ConnectionLine: React.FC<ConnectionLineProps> = ({ connection }) =>
         listening={true}
         name="connection-hitarea"
         perfectDrawEnabled={false}
+        hitStrokeWidth={40} // Explicit hit stroke width
       />
       
       {/* Main connection line - gentle curve extended to arrow base */}
@@ -231,22 +252,46 @@ export const ConnectionLine: React.FC<ConnectionLineProps> = ({ connection }) =>
         perfectDrawEnabled={false}
       />
 
-      {/* Connection label - pure text only */}
-      {connection.label && (
-        <Text
-          text={connection.label}
+      {/* Label area - always present for double-click, even without label */}
+      <Group>
+        {/* Invisible clickable area for label - always present */}
+        <Shape
           x={labelPosition.x}
           y={labelPosition.y}
-          fontSize={14}
-          fontFamily="Arial, sans-serif"
-          fontStyle="bold"
-          fill={strokeColor}
-          align="center"
-          verticalAlign="middle"
-          offsetX={connection.label.length * 4}
-          offsetY={7}
+          sceneFunc={(context, shape) => {
+            const textWidth = connection.label ? connection.label.length * 10 + 30 : 60; // Default width if no label
+            const textHeight = 40;
+            context.beginPath();
+            context.rect(-textWidth/2, -textHeight/2, textWidth, textHeight);
+            context.closePath();
+            context.fillStrokeShape(shape);
+          }}
+          fill="transparent"
+          stroke="transparent"
+          onDblClick={handleDoubleClick}
+          onDblTap={handleDoubleClick}
+          listening={true}
+          name="label-hitarea"
         />
-      )}
+        
+        {/* Visual label text - only if label exists */}
+        {connection.label && (
+          <Text
+            text={connection.label}
+            x={labelPosition.x}
+            y={labelPosition.y}
+            fontSize={14}
+            fontFamily="Arial, sans-serif"
+            fontStyle="bold"
+            fill={strokeColor}
+            align="center"
+            verticalAlign="middle"
+            offsetX={connection.label.length * 4}
+            offsetY={7}
+            listening={false}
+          />
+        )}
+      </Group>
       
       {/* Connection editing handles - higher priority than double-click */}
       {connection.isSelected && !canvasState.isEditingConnection && (
